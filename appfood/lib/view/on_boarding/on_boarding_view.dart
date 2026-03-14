@@ -1,9 +1,6 @@
 import 'package:appfood/common_widget/round_button.dart';
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
-// TODO: Update the import path below to the correct location of MainTabView
-import 'package:appfood/view/main_tab/main_tab_view.dart';
-
 
 class OnBoardingView extends StatefulWidget {
   const OnBoardingView({super.key});
@@ -75,30 +72,26 @@ class _OnBoardingViewState extends State<OnBoardingView> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  SizedBox(
-                    height: media.width * 0.2,
-                  ),
+                  SizedBox(height: media.width * 0.2),
                   Text(
                     pObj["title"].toString(),
                     style: TextStyle(
-                        color: TColor.primaryText,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800),
+                      color: TColor.primaryText,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                  SizedBox(
-                    height: media.width * 0.05,
-                  ),
+                  SizedBox(height: media.width * 0.05),
                   Text(
                     pObj["subtitle"].toString(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: TColor.secondaryText,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500),
+                      color: TColor.secondaryText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  SizedBox(
-                    height: media.width * 0.20,
-                  ),
+                  SizedBox(height: media.width * 0.20),
                 ],
               );
             }),
@@ -106,9 +99,7 @@ class _OnBoardingViewState extends State<OnBoardingView> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(
-                height: media.height * 0.6,
-              ),
+              SizedBox(height: media.height * 0.6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: pageArr.map((e) {
@@ -119,44 +110,39 @@ class _OnBoardingViewState extends State<OnBoardingView> {
                     height: 6,
                     width: 6,
                     decoration: BoxDecoration(
-                        color: index == selectPage
-                            ? TColor.primary
-                            : TColor.placeholder,
-                        borderRadius: BorderRadius.circular(4)),
+                      color: index == selectPage
+                          ? TColor.primary
+                          : TColor.placeholder,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   );
                 }).toList(),
               ),
-              SizedBox(
-                height: media.height * 0.28,
-              ),
+              SizedBox(height: media.height * 0.28),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: RoundButton(
-                    title: "Next",
-                    onPressed: () {
-                      if (selectPage >= 2) {
-                        // Home Screen
+                  title: "Next",
+                  onPressed: () {
+                    if (selectPage >= 2) {
+                      // Home Screen
+                    } else {
+                      //Next Screen
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MainTabView(),
-                          ),
+                      setState(() {
+                        selectPage = selectPage + 1;
+                        controller.animateToPage(
+                          selectPage,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.bounceInOut,
                         );
-                      } else {
-                        //Next Screen
-
-                        setState(() {
-                          selectPage = selectPage + 1;
-                          controller.animateToPage(selectPage,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.bounceInOut);
-                        });
-                      }
-                    }),
+                      });
+                    }
+                  },
+                ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
