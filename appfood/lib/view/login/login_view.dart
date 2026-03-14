@@ -5,6 +5,7 @@ import 'package:appfood/common_widget/round_textfield.dart';
 import 'package:appfood/view/login/rest_password_view.dart';
 import 'package:appfood/view/login/sing_up_view.dart';
 import 'package:flutter/material.dart';
+import '../on_boarding/on_boarding_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -58,7 +59,17 @@ class _LoginViewState extends State<LoginView> {
                 obscureText: true,
               ),
               const SizedBox(height: 25),
-              RoundButton(title: "Login", onPressed: () {}),
+              RoundButton(
+                title: "Login",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OnBoardingView(),
+                    ),
+                  );
+                },
+              ),
 
               const SizedBox(height: 25),
               TextButton(
