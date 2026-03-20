@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:appfood/view/login/login_view.dart';
@@ -24,12 +23,9 @@ class _ProfileViewState extends State<ProfileView> {
 
   Future<void> _fetchProfile() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-      
       final url = Uri.parse('http://localhost:3000/api/auth/profile');
       final response = await http.get(url, headers: {
-        'Authorization': 'Bearer \$token'
+        'Content-Type': 'application/json'
       });
       
       if (response.statusCode == 200) {
@@ -46,9 +42,6 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    
     if (!mounted) return;
     // Chuyển về màn hình Login và xóa toàn bộ route cũ
     Navigator.pushAndRemoveUntil(

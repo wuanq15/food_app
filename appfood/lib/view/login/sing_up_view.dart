@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/common_widget/round_button.dart';
@@ -53,9 +52,6 @@ class _SignUpViewState extends State<SignUpView> {
       Navigator.pop(context); // close dialog
       
       if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
         
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đăng ký thành công!")));
         Navigator.push(

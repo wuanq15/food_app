@@ -1,5 +1,5 @@
 import 'package:appfood/common_widget/round_button.dart';
-import 'package:appfood/view/main_tabview/main_tabview.dart';
+import 'package:appfood/view/login/welcome_view.dart';
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
 
@@ -126,12 +126,10 @@ class _OnBoardingViewState extends State<OnBoardingView> {
                   title: "Next",
                   onPressed: () {
                     if (selectPage >= 2) {
-                      // Home Screen
-
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MainTabView(),
+                          builder: (context) => const WelcomeView(),
                         ),
                       );
                     } else {

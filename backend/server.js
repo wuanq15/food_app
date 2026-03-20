@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const foodRoutes = require('./routes/foodRoutes');
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.json({ extended: false }));
 
 // Define Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/food', foodRoutes);
 
 app.get('/', (req, res) => {
   res.send('AppFood API is running...');

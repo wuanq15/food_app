@@ -61,5 +61,9 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ứng dụng cần quyền vị trí để hiển thị bản đồ và lấy tọa độ giao hàng.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Ứng dụng cần quyền vị trí để theo dõi lộ trình giao hàng.</string>
 </dict>
 </plist>

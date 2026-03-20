@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/common_widget/round_button.dart';
@@ -11,6 +10,7 @@ import 'package:appfood/view/login/sing_up_view.dart';
 import 'package:appfood/view/main_tabview/main_tabview.dart';
 import 'package:appfood/view/on_boarding/on_boarding_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginView extends StatefulWidget {
@@ -26,15 +26,21 @@ class _LoginViewState extends State<LoginView> {
 
   Future<void> _login() async {
     if (txtEmail.text.isEmpty || txtPassword.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng nhập Email và Mật khẩu")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Vui lòng nhập Email và Mật khẩu")),
+      );
       return;
     }
 
-    showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
-    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
     // Đối với Emulator Android, localhost là 10.0.2.2. IOS/Web là localhost
     final url = Uri.parse('http://localhost:3000/api/auth/login');
-    
+
     try {
       final response = await http.post(
         url,
@@ -44,16 +50,15 @@ class _LoginViewState extends State<LoginView> {
           'password': txtPassword.text,
         }),
       );
-      
+
       if (!mounted) return;
       Navigator.pop(context); // close dialog
-      
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
-        
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đăng nhập thành công!")));
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Đăng nhập thành công!")));
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const MainTabView()),
@@ -61,18 +66,31 @@ class _LoginViewState extends State<LoginView> {
         );
       } else {
         final data = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? "Lỗi đăng nhập")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? "Lỗi đăng nhập")),
+        );
       }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // close dialog
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi kết nối server: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi kết nối server: $e")));
     }
   }
 
-  Future<void> _handleSocialLogin(String provider, String email, String fullname, String providerId) async {
-    showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
-    
+  Future<void> _handleSocialLogin(
+    String provider,
+    String email,
+    String fullname,
+    String providerId,
+  ) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
     final url = Uri.parse('http://localhost:3000/api/auth/social');
     try {
       final response = await http.post(
@@ -85,24 +103,32 @@ class _LoginViewState extends State<LoginView> {
           'provider_id': providerId,
         }),
       );
-      
+
       if (!mounted) return;
       Navigator.pop(context); // close dialog
-      
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
-        
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Đăng nhập $provider thành công!")));
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const MainTabView()), (route) => false);
+        // final data = jsonDecode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Đăng nhập $provider thành công!")),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainTabView()),
+          (route) => false,
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Lỗi chứng thực từ server")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Lỗi chứng thực từ server")),
+        );
       }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi kết nối: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi kết nối: $e")));
     }
   }
 
@@ -148,10 +174,7 @@ class _LoginViewState extends State<LoginView> {
                 obscureText: true,
               ),
               const SizedBox(height: 25),
-              RoundButton(
-                title: "Login",
-                onPressed: _login,
-              ),
+              RoundButton(title: "Login", onPressed: _login),
 
               const SizedBox(height: 25),
               TextButton(
@@ -186,17 +209,44 @@ class _LoginViewState extends State<LoginView> {
                 title: "Login with Facebook",
                 icon: "assets/img/facebook_logo.png",
                 backgroundColor: const Color(0xff367FC0),
-                onPressed: () {
-                  // TODO: Bỏ comment khi tích hợp xong Facebook SDK
-                  // final LoginResult result = await FacebookAuth.instance.login();
-                  // if (result.status == LoginStatus.success) {
-                  //    final userData = await FacebookAuth.instance.getUserData();
-                  //    _handleSocialLogin('facebook', userData['email'], userData['name'], userData['id']);
-                  // }
-                  
-                  // MOCK TEST DATA:
-                  print("Mocking Facebook Login...");
-                  _handleSocialLogin('facebook', 'fb_user_test@appfood.com', 'Facebook Gamer', 'fb_99999');
+                onPressed: () async {
+                  try {
+                    print("Bắt đầu gọi Facebook SDK...");
+                    final LoginResult result = await FacebookAuth.instance
+                        .login(permissions: ['public_profile', 'email']);
+
+                    if (result.status == LoginStatus.success) {
+                      final userData = await FacebookAuth.instance
+                          .getUserData();
+                      print(
+                        "Facebook Login Success! Tên: ${userData['name']}",
+                      );
+                      _handleSocialLogin(
+                        'facebook',
+                        userData['email'] ?? "${userData['id']}@facebook.com",
+                        userData['name'] ?? 'Facebook User',
+                        userData['id'] ?? '',
+                      );
+                    } else {
+                      print("Facebook Login Status: ${result.status}");
+                      if (result.status == LoginStatus.failed) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Lỗi Facebook: ${result.message}"),
+                          ),
+                        );
+                      }
+                    }
+                  } catch (error) {
+                    print("Facebook Login Error: \$error");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "Yêu cầu cấu hình App ID Facebook để dùng tính năng này.",
+                        ),
+                      ),
+                    );
+                  }
                 },
               ),
 
@@ -212,22 +262,27 @@ class _LoginViewState extends State<LoginView> {
                     print("Bắt đầu gọi Google SDK...");
                     final GoogleSignIn googleSignIn = GoogleSignIn();
                     // Đăng xuất rỗng trước để force chọn tài khoản (tuỳ chọn)
-                    // await googleSignIn.signOut(); 
-                    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-                    
+                    // await googleSignIn.signOut();
+                    final GoogleSignInAccount? googleUser = await googleSignIn
+                        .signIn();
+
                     if (googleUser != null) {
-                       print("Google Login Success! Tên: \${googleUser.displayName}");
-                       // Đẩy thông tin lên Backend Auth của chúng ta
-                       _handleSocialLogin(
-                         'google', 
-                         googleUser.email, 
-                         googleUser.displayName ?? 'Google User', 
-                         googleUser.id
-                       );
+                      print(
+                        "Google Login Success! Tên: ${googleUser.displayName}",
+                      );
+                      // Đẩy thông tin lên Backend Auth của chúng ta
+                      _handleSocialLogin(
+                        'google',
+                        googleUser.email,
+                        googleUser.displayName ?? 'Google User',
+                        googleUser.id,
+                      );
                     }
                   } catch (error) {
                     print("Google Login Error: \$error");
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi Google Sign In: \$error")));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Lỗi Google Sign In: \$error")),
+                    );
                   }
                 },
               ),
