@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/common/cart_controller.dart';
+import 'package:appfood/view/menu/cart_view.dart';
+import 'package:appfood/common/smart_image.dart';
 
 class ItemDetailView extends StatefulWidget {
   final Map<String, String> itemObj;
@@ -26,7 +29,7 @@ class _ItemDetailViewState extends State<ItemDetailView> {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Image.network(
+                SmartImage(
                   widget.itemObj["image"] ?? "https://loremflickr.com/500/500/food",
                   width: double.infinity,
                   height: MediaQuery.of(context).size.width,
@@ -317,36 +320,71 @@ class _ItemDetailViewState extends State<ItemDetailView> {
                             style: TextStyle(color: TColor.primaryText, fontSize: 22, fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: TColor.primary,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.shopping_cart, color: Colors.white, size: 14),
-                                const SizedBox(width: 4),
-                                const Text("Thêm vào giỏ", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                              ],
+                          GestureDetector(
+                            onTap: () {
+                              if (quantity > 0) {
+                                CartController().addItem(
+                                  menuItemId: "\${widget.itemObj['name']}-\${widget.itemObj['restaurant_id'] ?? ''}", // Fallback composite ID
+                                  name: widget.itemObj["name"] ?? "Món ăn",
+                                  price: itemPrice,
+                                  imageUrl: widget.itemObj["image"] ?? "",
+                                  quantity: quantity,
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Đã thêm ${quantity} phần vào giỏ hàng!"),
+                                    backgroundColor: TColor.primary,
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Vui lòng chọn số lượng > 0"),
+                                    backgroundColor: Colors.redAccent,
+                                  ),
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: TColor.primary,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.shopping_cart, color: Colors.white, size: 14),
+                                  const SizedBox(width: 4),
+                                  const Text("Thêm vào giỏ", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
                             ),
                           )
                         ],
                       ),
-                      Container(
-                        width: 45,
-                        height: 45,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                            ),
-                          ],
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CartView()),
+                          );
+                        },
+                        child: Container(
+                          width: 45,
+                          height: 45,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Icon(Icons.shopping_cart_outlined, color: TColor.primary),
                         ),
-                        child: Icon(Icons.shopping_cart_outlined, color: TColor.primary),
                       )
                     ],
                   ),

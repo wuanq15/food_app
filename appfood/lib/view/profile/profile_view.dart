@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:appfood/view/login/login_view.dart';
 
@@ -93,23 +94,81 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
               const SizedBox(height: 30),
-              _buildInfoRow(Icons.phone, "Số điện thoại", userData?['phone'] ?? "N/A"),
-              _buildInfoRow(Icons.location_on, "Địa chỉ", userData?['address'] ?? "Chưa thiết lập"),
-              const SizedBox(height: 50),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(Icons.phone_outlined, "Số điện thoại", userData?['phone'] ?? "Chưa cập nhật"),
+                    const Divider(color: Colors.black12, height: 1),
+                    _buildInfoRow(Icons.location_on_outlined, "Địa chỉ", userData?['address'] ?? "Chưa thiết lập"),
+                    const Divider(color: Colors.black12, height: 1),
+                    _buildInfoRow(
+                      Icons.calendar_today_outlined, 
+                      "Ngày tham gia", 
+                      userData?['created_at'] != null 
+                        ? DateFormat('dd/MM/yyyy').format(DateTime.parse(userData!['created_at'])) 
+                        : "Không rõ"
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 25),
+              
+              // Menu Actions
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    _buildActionMenu(Icons.receipt_long_outlined, "Lịch sử đơn hàng"),
+                    const Divider(color: Colors.black12, height: 1),
+                    _buildActionMenu(Icons.account_balance_wallet_outlined, "Phương thức thanh toán"),
+                    const Divider(color: Colors.black12, height: 1),
+                    _buildActionMenu(Icons.local_offer_outlined, "Voucher của tôi"),
+                    const Divider(color: Colors.black12, height: 1),
+                    _buildActionMenu(Icons.settings_outlined, "Cài đặt tài khoản"),
+                    const Divider(color: Colors.black12, height: 1),
+                    _buildActionMenu(Icons.help_outline, "Trung tâm hỗ trợ"),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
               ElevatedButton.icon(
                 onPressed: _logout,
                 icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text("Đăng xuất", style: TextStyle(color: Colors.white, fontSize: 16)),
+                label: const Text("Đăng xuất", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: TColor.primary,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  elevation: 2,
                 ),
-              )
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildActionMenu(IconData icon, String title) {
+    return ListTile(
+      leading: Icon(icon, color: TColor.primary, size: 24),
+      title: Text(title, style: TextStyle(color: TColor.primaryText, fontSize: 15, fontWeight: FontWeight.w600)),
+      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.black38),
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("$title hiện đang được phát triển!")),
+        );
+      },
     );
   }
 

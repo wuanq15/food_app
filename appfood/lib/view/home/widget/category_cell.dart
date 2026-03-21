@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/common/smart_image.dart';
 import 'package:appfood/model/category_model.dart';
 
 class CategoryCell extends StatelessWidget {
@@ -20,21 +21,38 @@ class CategoryCell extends StatelessWidget {
         margin: const EdgeInsets.only(right: 15),
         child: Column(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                category.imageUrl,
-                width: 85,
-                height: 85,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 85,
-                  height: 85,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.fastfood, color: Colors.grey),
-                ),
-              ),
-            ),
+            category.name == "Khuyến mãi"
+                ? Container(
+                    width: 85,
+                    height: 85,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: [Colors.orange.shade400, Colors.deepOrange.shade600],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 5, offset: const Offset(0, 3)),
+                      ],
+                    ),
+                    child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 36),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SmartImage(
+                      category.imageUrl,
+                      width: 85,
+                      height: 85,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 85,
+                        height: 85,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.fastfood, color: Colors.grey),
+                      ),
+                    ),
+                  ),
             const SizedBox(height: 8),
             Text(
               category.name,
