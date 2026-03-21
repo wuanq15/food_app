@@ -105,7 +105,7 @@ class _MenuItemsViewState extends State<MenuItemsView> {
                       itemCount: _items.length,
                       itemBuilder: (context, index) {
                         var iter = _items[index];
-                        String imgUrl = "https://loremflickr.com/400/400/food?random=\${iter.id}";
+                        String imgUrl = iter.imageUrl.isNotEmpty ? iter.imageUrl : "https://loremflickr.com/400/400/food?random=\${iter.id}";
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -127,7 +127,9 @@ class _MenuItemsViewState extends State<MenuItemsView> {
                             margin: const EdgeInsets.only(bottom: 2),
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: NetworkImage(imgUrl),
+                                image: imgUrl.startsWith('http') 
+                                      ? NetworkImage(imgUrl) as ImageProvider 
+                                      : AssetImage(imgUrl),
                                 fit: BoxFit.cover,
                               ),
                             ),

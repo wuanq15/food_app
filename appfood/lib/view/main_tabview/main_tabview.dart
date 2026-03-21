@@ -46,50 +46,19 @@ class _MainTabViewState extends State<MainTabView> {
         ],
       ),
       backgroundColor: const Color(0xfff5f5f5),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          if (_currentIndex != 2) {
-            setState(() {
-              _currentIndex = 2;
-            });
-          } else {
-            _navigatorKeys[2].currentState?.popUntil((route) => route.isFirst);
-          }
-        },
-        backgroundColor: _currentIndex == 2
-            ? TColor.primary
-            : TColor.placeholder,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
-        child: Icon(Icons.home_rounded, color: TColor.white, size: 35),
-      ),
       bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
         color: TColor.white,
         elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left Tabs
-              Row(
-                children: [
-                  _buildTabItem(0, Icons.grid_view_rounded, "Thực đơn"),
-                  const SizedBox(width: 25),
-                  _buildTabItem(1, Icons.shopping_bag_outlined, "Ưu đãi"),
-                ],
-              ),
-              // Right Tabs
-              Row(
-                children: [
-                  _buildTabItem(3, Icons.person_outline_rounded, "Hồ sơ"),
-                  const SizedBox(width: 25),
-                  _buildTabItem(4, Icons.more_horiz_rounded, "Khác"),
-                ],
-              ),
+              _buildTabItem(0, Icons.grid_view_rounded, "Thực đơn"),
+              _buildTabItem(1, Icons.shopping_bag_outlined, "Ưu đãi"),
+              _buildTabItem(2, Icons.home_rounded, "Trang chủ"),
+              _buildTabItem(3, Icons.person_outline_rounded, "Hồ sơ"),
+              _buildTabItem(4, Icons.more_horiz_rounded, "Khác"),
             ],
           ),
         ),

@@ -3,6 +3,8 @@ import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/view/menu/menu_items_view.dart';
 import 'package:appfood/view/search/search_view.dart';
 import 'package:appfood/model/category_model.dart';
+import 'package:appfood/common/smart_image.dart';
+import 'package:http/http.dart' as http;
 
 class MenuView extends StatefulWidget {
   const MenuView({super.key});
@@ -222,7 +224,7 @@ class _MenuViewState extends State<MenuView> {
                                 padding: const EdgeInsets.all(5),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(35),
-                                  child: Image.network(
+                                  child: SmartImage(
                                     data.imageUrl,
                                     width: 70,
                                     height: 70,

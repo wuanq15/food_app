@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/common/smart_image.dart';
 import 'package:appfood/model/restaurant_model.dart';
 
 class RestaurantCell extends StatelessWidget {
@@ -21,7 +22,7 @@ class RestaurantCell extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(
+            SmartImage(
               restaurant.imageUrl,
               width: double.infinity,
               height: 200,

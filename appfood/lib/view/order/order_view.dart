@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/model/restaurant_model.dart';
+import 'package:appfood/common/smart_image.dart';
 import 'package:appfood/view/menu/item_detail_view.dart'; // optional, to navigate when clicked
 
 class OrderView extends StatefulWidget {
@@ -51,7 +52,7 @@ class _OrderViewState extends State<OrderView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Ưu đãi Mới nhất",
+                        "Siêu Ưu Đãi Hôm Nay",
                         style: TextStyle(
                           color: TColor.primaryText,
                           fontSize: 24,
@@ -108,23 +109,67 @@ class _OrderViewState extends State<OrderView> {
 
                   return GestureDetector(
                     onTap: () {
-                      // Navigate to somewhere when clicked
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ItemDetailView(itemObj: {
+                            "name": restaurant.name,
+                            "price": "69000",
+                            "image": restaurant.imageUrl,
+                            "category": restaurant.type1,
+                            "rate": restaurant.rating.toString(),
+                            "food_type": restaurant.type2,
+                          }),
+                        ),
+                      );
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Image edge-to-edge
-                        Image.network(
-                          restaurant.imageUrl,
-                          width: double.infinity,
-                          height: 200,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            width: double.infinity,
-                            height: 200,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.restaurant, color: Colors.grey, size: 50),
-                          ),
+                        // Image edge-to-edge with Stack for Badge
+                        Stack(
+                          children: [
+                            SmartImage(
+                              restaurant.imageUrl,
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: double.infinity,
+                                height: 200,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.restaurant, color: Colors.grey, size: 50),
+                              ),
+                            ),
+                            Positioned(
+                              top: 15,
+                              left: 0,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: const BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.only(
+                                    topRight: Radius.circular(8),
+                                    bottomRight: Radius.circular(8),
+                                  ),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.local_fire_department_rounded, color: Colors.amber, size: 16),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "Giảm sốc 30%",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         // Details text below
                         Padding(

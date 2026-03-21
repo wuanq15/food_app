@@ -7,6 +7,7 @@ import 'package:appfood/view/search/search_view.dart';
 import 'package:appfood/view/menu/menu_view.dart';
 import 'package:appfood/view/menu/item_detail_view.dart';
 import 'package:appfood/view/menu/menu_items_view.dart';
+import 'package:appfood/view/menu/cart_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -68,35 +69,47 @@ class _HomeViewState extends State<HomeView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Giao hàng đến",
-                          style: TextStyle(color: TColor.placeholder, fontSize: 12),
-                        ),
-                        GestureDetector(
-                          onTap: _openMap,
-                          child: Row(
-                            children: [
-                              Text(
-                                _currentAddress.length > 25 ? "\${_currentAddress.substring(0, 25)}..." : _currentAddress,
-                                style: TextStyle(
-                                  color: TColor.secondaryText,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(width: 5),
-                              Icon(Icons.keyboard_arrow_down, color: TColor.primary),
-                            ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Giao hàng đến",
+                            style: TextStyle(color: TColor.placeholder, fontSize: 12),
                           ),
-                        ),
-                      ],
+                          GestureDetector(
+                            onTap: _openMap,
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    _currentAddress.length > 25 ? "${_currentAddress.substring(0, 25)}..." : _currentAddress,
+                                    style: TextStyle(
+                                      color: TColor.secondaryText,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Icon(Icons.keyboard_arrow_down, color: TColor.primary),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Icon(Icons.shopping_cart_outlined, size: 28, color: TColor.primaryText),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CartView()),
+                        );
+                      },
+                      icon: Icon(Icons.shopping_cart_outlined, size: 28, color: TColor.primaryText),
+                    ),
                   ],
                 ),
               ),

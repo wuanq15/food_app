@@ -9,6 +9,7 @@ class MenuItemModel {
   final double price;
   final String category; // "Món chính", "Khai vị", "Tráng miệng", "Đồ uống"
   final String emoji;
+  final String imageUrl;
   final bool isAvailable;
   final bool isBestSeller;
 
@@ -20,6 +21,7 @@ class MenuItemModel {
     required this.price,
     required this.category,
     required this.emoji,
+    required this.imageUrl,
     this.isAvailable = true,
     this.isBestSeller = false,
   });
@@ -33,6 +35,7 @@ class MenuItemModel {
       price: double.tryParse(json['price'].toString()) ?? 0.0,
       category: json['category'] ?? '',
       emoji: json['emoji'] ?? '',
+      imageUrl: json['image'] ?? '',
       isAvailable: true,
       isBestSeller: json['is_best_seller'] ?? false,
     );
