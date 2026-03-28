@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:appfood/common/cart_nav.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/view/menu/item_detail_view.dart';
 
@@ -60,7 +61,11 @@ class _MenuItemsViewState extends State<MenuItemsView> {
                       ),
                     ),
                   ),
-                  Icon(Icons.shopping_cart_outlined, size: 28, color: TColor.primaryText),
+                  IconButton(
+                    onPressed: () => openAppCart(context),
+                    icon: Icon(Icons.shopping_cart_outlined,
+                        size: 28, color: TColor.primaryText),
+                  ),
                 ],
               ),
             ),
@@ -105,17 +110,24 @@ class _MenuItemsViewState extends State<MenuItemsView> {
                       itemCount: _items.length,
                       itemBuilder: (context, index) {
                         var iter = _items[index];
-                        String imgUrl = iter.imageUrl.isNotEmpty ? iter.imageUrl : "https://loremflickr.com/400/400/food?random=\${iter.id}";
+                        String imgUrl = iter.imageUrl.isNotEmpty
+                            ? iter.imageUrl
+                            : "https://loremflickr.com/400/400/food?random=${iter.id}";
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ItemDetailView(itemObj: {
+                                  "id": iter.id,
+                                  "restaurant_id": iter.restaurantId,
+                                  "restaurant_name": "",
                                   "name": iter.name,
                                   "price": iter.price.toStringAsFixed(0),
                                   "image": imgUrl,
                                   "category": iter.category,
+                                  "emoji": iter.emoji,
+                                  "description": iter.description,
                                   "rate": "4.9",
                                   "food_type": iter.category,
                                 }),

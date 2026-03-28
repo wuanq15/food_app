@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:appfood/common/cart_nav.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/model/restaurant_model.dart';
 import 'package:appfood/common/smart_image.dart';
-import 'package:appfood/view/menu/item_detail_view.dart'; // optional, to navigate when clicked
+import 'package:appfood/view/restaurant/restaurant_detail_view.dart';
 
 class OrderView extends StatefulWidget {
   const OrderView({super.key});
@@ -60,8 +61,9 @@ class _OrderViewState extends State<OrderView> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.shopping_cart_outlined, color: TColor.primaryText, size: 28),
+                        onPressed: () => openAppCart(context),
+                        icon: Icon(Icons.shopping_cart_outlined,
+                            color: TColor.primaryText, size: 28),
                       ),
                     ],
                   ),
@@ -112,14 +114,8 @@ class _OrderViewState extends State<OrderView> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ItemDetailView(itemObj: {
-                            "name": restaurant.name,
-                            "price": "69000",
-                            "image": restaurant.imageUrl,
-                            "category": restaurant.type1,
-                            "rate": restaurant.rating.toString(),
-                            "food_type": restaurant.type2,
-                          }),
+                          builder: (_) =>
+                              RestaurantDetailView(restaurant: restaurant),
                         ),
                       );
                     },

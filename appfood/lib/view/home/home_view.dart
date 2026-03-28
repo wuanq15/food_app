@@ -4,10 +4,8 @@ import 'package:appfood/model/restaurant_model.dart';
 import 'package:appfood/view/home/widget/restaurant_cell.dart';
 import 'package:appfood/view/map/map_picker_view.dart';
 import 'package:appfood/view/search/search_view.dart';
-import 'package:appfood/view/menu/menu_view.dart';
-import 'package:appfood/view/menu/item_detail_view.dart';
-import 'package:appfood/view/menu/menu_items_view.dart';
-import 'package:appfood/view/menu/cart_view.dart';
+import 'package:appfood/common/cart_nav.dart';
+import 'package:appfood/view/restaurant/restaurant_detail_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -102,12 +100,7 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => CartView()),
-                        );
-                      },
+                      onPressed: () => openAppCart(context),
                       icon: Icon(Icons.shopping_cart_outlined, size: 28, color: TColor.primaryText),
                     ),
                   ],
@@ -232,14 +225,8 @@ class _HomeViewState extends State<HomeView> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ItemDetailView(
-                            itemObj: {
-                              "name": _restaurants[index].name,
-                              "image": _restaurants[index].imageUrl,
-                              "price": "55000",
-                              "category": _restaurants[index].type1,
-                              "emoji": "🍔",
-                            },
+                          builder: (_) => RestaurantDetailView(
+                            restaurant: _restaurants[index],
                           ),
                         ),
                       );

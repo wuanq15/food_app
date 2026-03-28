@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:appfood/common/cart_nav.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/view/menu/menu_items_view.dart';
 import 'package:appfood/view/search/search_view.dart';
 import 'package:appfood/model/category_model.dart';
 import 'package:appfood/common/smart_image.dart';
-import 'package:http/http.dart' as http;
 
 class MenuView extends StatefulWidget {
   const MenuView({super.key});
@@ -55,10 +55,13 @@ class _MenuViewState extends State<MenuView> {
                       color: TColor.primaryText,
                     ),
                   ),
-                  Icon(
-                    Icons.shopping_cart_outlined,
-                    size: 28,
-                    color: TColor.primaryText,
+                  IconButton(
+                    onPressed: () => openAppCart(context),
+                    icon: Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 28,
+                      color: TColor.primaryText,
+                    ),
                   ),
                 ],
               ),

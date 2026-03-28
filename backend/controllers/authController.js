@@ -5,11 +5,15 @@ const db = require('../config/db');
 // @route   POST /api/auth/register
 // @desc    Register a user
 const register = async (req, res) => {
-  const { fullname, email, password, phone, address } = req.body;
+  const { fullname, password, phone, address } = req.body;
+  const email = (req.body.email || '').trim().toLowerCase();
 
   try {
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
+    }
     // 1. Check if user exists
-    const userCheck = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const userCheck = await db.query('SELECT * FROM users WHERE LOWER(TRIM(email)) = $1', [email]);
     if (userCheck.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -49,11 +53,18 @@ const register = async (req, res) => {
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const email = (req.body.email || '').trim().toLowerCase();
+  const { password } = req.body;
 
   try {
-    // 1. Check if user exists
-    const userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Vui lòng nhập email và mật khẩu' });
+    }
+    // 1. Check if user exists (không phân biệt hoa thường)
+    const userResult = await db.query(
+      'SELECT * FROM users WHERE LOWER(TRIM(email)) = $1',
+      [email],
+    );
     if (userResult.rows.length === 0) {
       return res.status(400).json({ message: 'Invalid Credentials' });
     }
@@ -113,11 +124,15 @@ const getProfile = async (req, res) => {
 // @route   POST /api/auth/social
 // @desc    Social Login (Google/Facebook)
 const socialLogin = async (req, res) => {
-  const { email, fullname, provider, provider_id } = req.body;
+  const { fullname, provider, provider_id } = req.body;
+  const email = (req.body.email || '').trim().toLowerCase();
 
   try {
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
     // 1. Check if user already exists
-    let userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    let userResult = await db.query('SELECT * FROM users WHERE LOWER(TRIM(email)) = $1', [email]);
     let user;
 
     if (userResult.rows.length > 0) {

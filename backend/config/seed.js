@@ -1,3 +1,24 @@
+const bcrypt = require('bcrypt');
+
+/** Tài khoản thử nghiệm nếu DB chưa có user (đăng nhập app). */
+const seedDemoUser = async (pool) => {
+  try {
+    const demoEmail = 'demo@appfood.com';
+    const u = await pool.query('SELECT id FROM users WHERE LOWER(TRIM(email)) = $1', [
+      demoEmail,
+    ]);
+    if (u.rows.length > 0) return;
+    const hash = await bcrypt.hash('demo123456', 10);
+    await pool.query(
+      'INSERT INTO users (fullname, email, password, phone, address) VALUES ($1, $2, $3, $4, $5)',
+      ['Tài khoản demo', demoEmail, hash, '', ''],
+    );
+    console.log('Demo login: demo@appfood.com / demo123456');
+  } catch (e) {
+    console.error('seedDemoUser:', e.message);
+  }
+};
+
 const seedData = async (pool) => {
   try {
     const resCount = await pool.query('SELECT COUNT(*) FROM restaurants');
@@ -86,4 +107,4 @@ const seedData = async (pool) => {
   }
 };
 
-module.exports = { seedData };
+module.exports = { seedData, seedDemoUser };

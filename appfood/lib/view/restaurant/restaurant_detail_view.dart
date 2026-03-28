@@ -3,7 +3,7 @@ import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/model/restaurant_model.dart';
 import 'package:appfood/model/menu_item_model.dart';
 import 'package:appfood/model/cart_item_model.dart';
-import 'package:appfood/view/cart/cart_view.dart';
+import 'package:appfood/common/cart_nav.dart';
 
 class RestaurantDetailView extends StatefulWidget {
   final RestaurantModel restaurant;
@@ -16,17 +16,28 @@ class RestaurantDetailView extends StatefulWidget {
 
 class _RestaurantDetailViewState extends State<RestaurantDetailView> {
   final CartManager _cart = CartManager();
-  late List<MenuItemModel> _menuItems;
-  late List<String> _categories;
+  List<MenuItemModel> _menuItems = [];
+  List<String> _categories = [];
   int _selectedCatIndex = 0;
+  bool _loadingMenu = true;
 
   @override
   void initState() {
     super.initState();
-    _menuItems = MenuItemModel.mockForRestaurant(widget.restaurant.id);
-    _categories = MenuItemModel.categoriesOf(_menuItems);
-    // Rebuild khi cart thay đổi (cập nhật số lượng trên button)
+    _loadMenu();
     _cart.addListener(_onCartChanged);
+  }
+
+  Future<void> _loadMenu() async {
+    final items =
+        await MenuItemModel.fetchByRestaurant(widget.restaurant.id);
+    if (!mounted) return;
+    setState(() {
+      _menuItems = items;
+      _categories = MenuItemModel.categoriesOf(items);
+      _selectedCatIndex = 0;
+      _loadingMenu = false;
+    });
   }
 
   @override
@@ -43,52 +54,60 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
 
     return Scaffold(
       backgroundColor: TColor.background,
-      body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              // ── Ảnh + AppBar ──
-              _buildSliverAppBar(r),
-
-              // ── Thông tin nhà hàng ──
-              SliverToBoxAdapter(child: _buildRestaurantInfo(r)),
-
-              // ── Category tabs ──
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _CategoryTabDelegate(
-                  categories: _categories,
-                  selectedIndex: _selectedCatIndex,
-                  onSelect: (i) => setState(() => _selectedCatIndex = i),
-                  color: TColor.background,
+      body: _loadingMenu
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                CustomScrollView(
+                  slivers: [
+                    _buildSliverAppBar(r),
+                    SliverToBoxAdapter(child: _buildRestaurantInfo(r)),
+                    if (_categories.isNotEmpty)
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _CategoryTabDelegate(
+                          categories: _categories,
+                          selectedIndex: _selectedCatIndex,
+                          onSelect: (i) =>
+                              setState(() => _selectedCatIndex = i),
+                          color: TColor.background,
+                        ),
+                      ),
+                    if (_categories.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            'Chưa có món trong thực đơn.',
+                            style: TextStyle(color: TColor.secondaryText),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final filtered = _menuItems
+                                .where((m) =>
+                                    m.category ==
+                                    _categories[_selectedCatIndex])
+                                .toList();
+                            if (index >= filtered.length) return null;
+                            return _buildMenuItem(filtered[index]);
+                          },
+                          childCount: _menuItems
+                              .where((m) =>
+                                  m.category ==
+                                  _categories[_selectedCatIndex])
+                              .length,
+                        ),
+                      ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
                 ),
-              ),
-
-              // ── Menu items ──
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final filtered = _menuItems
-                        .where((m) => m.category == _categories[_selectedCatIndex])
-                        .toList();
-                    if (index >= filtered.length) return null;
-                    return _buildMenuItem(filtered[index]);
-                  },
-                  childCount: _menuItems
-                      .where((m) => m.category == _categories[_selectedCatIndex])
-                      .length,
-                ),
-              ),
-
-              // Bottom padding cho floating button
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-          ),
-
-          // ── Floating Cart Button ──
-          if (!_cart.isEmpty) _buildCartButton(context),
-        ],
-      ),
+                if (!_cart.isEmpty) _buildCartButton(context),
+              ],
+            ),
     );
   }
 
@@ -129,7 +148,8 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
           color: TColor.textfield,
           child: Center(
             child: Text(
-              _categoryEmoji(r.category),
+              _categoryEmoji(
+                  r.category.isNotEmpty ? r.category : r.type1),
               style: const TextStyle(fontSize: 80),
             ),
           ),
@@ -335,10 +355,11 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              border: Border.all(color: TColor.primary),
+              color: TColor.primary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.remove_rounded, color: TColor.primary, size: 16),
+            child: const Icon(Icons.remove_rounded,
+                color: Colors.white, size: 16),
           ),
         ),
         SizedBox(
@@ -355,7 +376,7 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
           ),
         ),
         GestureDetector(
-          onTap: () => _cart.addItem(item, widget.restaurant.id, widget.restaurant.name),
+          onTap: () => _cart.increaseItem(item.id),
           child: Container(
             width: 30,
             height: 30,
@@ -377,10 +398,7 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
       left: 20,
       right: 20,
       child: GestureDetector(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CartView()),
-        ),
+        onTap: () => openAppCart(context),
         child: Container(
           height: 56,
           decoration: BoxDecoration(
@@ -436,8 +454,12 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
   }
 
   String _categoryEmoji(String cat) {
-    const map = {"Cơm": "🍚", "Phở": "🍜", "Bánh mì": "🥖", "Pizza": "🍕", "Burger": "🍔"};
-    return map[cat] ?? "🍱";
+    if (cat.contains('Phở')) return '🍜';
+    if (cat.contains('Bánh mì')) return '🥖';
+    if (cat.contains('Pizza')) return '🍕';
+    if (cat.contains('Burger')) return '🍔';
+    if (cat.contains('Cơm')) return '🍚';
+    return '🍱';
   }
 }
 

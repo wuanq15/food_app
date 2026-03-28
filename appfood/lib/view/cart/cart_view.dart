@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/common/globs.dart';
 import 'package:appfood/model/cart_item_model.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:appfood/view/map/map_picker_view.dart';
@@ -15,6 +19,7 @@ class _CartViewState extends State<CartView> {
   final CartManager _cart = CartManager();
   String _deliveryAddress = "";
   LatLng? _deliveryLatLng;
+  bool _isCheckingOut = false;
 
   @override
   void initState() {
@@ -47,6 +52,90 @@ class _CartViewState extends State<CartView> {
     }
   }
 
+  Future<void> _handleCheckout() async {
+    if (_cart.isEmpty) return;
+    if (_deliveryAddress.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn địa chỉ giao hàng trước khi thanh toán.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isCheckingOut = true);
+    try {
+      final url = Uri.parse(Globs.checkoutUrl);
+      final body = jsonEncode({
+        'total_price': _cart.total,
+        'delivery_address': _deliveryAddress,
+        if (_deliveryLatLng != null) 'delivery_lat': _deliveryLatLng!.latitude,
+        if (_deliveryLatLng != null) 'delivery_lng': _deliveryLatLng!.longitude,
+        'items': _cart.items
+            .map(
+              (e) => {
+                'menuItemId': e.item.id,
+                'name': e.item.name,
+                'quantity': e.quantity,
+                'price': e.item.price,
+              },
+            )
+            .toList(),
+      });
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 201) {
+        _cart.clear();
+        setState(() {
+          _deliveryAddress = '';
+          _deliveryLatLng = null;
+        });
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            title: const Text('Đặt hàng thành công'),
+            content: Text(
+              'Cảm ơn bạn! Đơn hàng đang được xử lý.\nThời gian giao dự kiến: 20–30 phút.',
+              style: TextStyle(color: TColor.secondaryText, height: 1.4),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Đóng', style: TextStyle(color: TColor.primaryDark)),
+              ),
+            ],
+          ),
+        );
+        if (mounted) Navigator.of(context).maybePop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Thanh toán thất bại (${response.statusCode}). Vui lòng thử lại.',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi kết nối: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isCheckingOut = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +158,7 @@ class _CartViewState extends State<CartView> {
         actions: [
           if (!_cart.isEmpty)
             TextButton(
-              onPressed: () => _showClearDialog(context),
+              onPressed: _showClearDialog,
               child: Text(
                 "Xoá tất cả",
                 style: TextStyle(color: TColor.red, fontSize: 13),
@@ -175,6 +264,9 @@ class _CartViewState extends State<CartView> {
   // ── CART ITEM ROW ──
   Widget _buildCartItem(CartItem cartItem) {
     final item = cartItem.item;
+    final shopSub = _cart.hasMultipleRestaurants
+        ? _cart.labelForRestaurant(item.restaurantId)
+        : null;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -212,6 +304,17 @@ class _CartViewState extends State<CartView> {
                     color: TColor.primaryText,
                   ),
                 ),
+                if (shopSub != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    shopSub,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: TColor.secondaryText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   CartManager.formatPrice(item.price),
@@ -248,7 +351,7 @@ class _CartViewState extends State<CartView> {
               ),
               _circleBtn(
                 icon: Icons.add_rounded,
-                onTap: () => _cart.addItem(item, "", _cart.restaurantName),
+                onTap: () => _cart.increaseItem(item.id),
                 filled: true,
               ),
             ],
@@ -366,6 +469,39 @@ class _CartViewState extends State<CartView> {
               ),
             ),
           ),
+
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              onPressed: _isCheckingOut ? null : _handleCheckout,
+              style: FilledButton.styleFrom(
+                backgroundColor: TColor.primary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: TColor.placeholder,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(26),
+                ),
+                elevation: 0,
+              ),
+              child: _isCheckingOut
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Thanh toán',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+            ),
+          ),
         ],
       ),
     );
@@ -410,48 +546,23 @@ class _CartViewState extends State<CartView> {
     );
   }
 
-  // ── ACTIONS ──
-  void _placeOrder(BuildContext context) {
-    showDialog(
+  void _showClearDialog() {
+    showDialog<void>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("🎉 Đặt hàng thành công!"),
-        content: Text(
-          "Đơn hàng từ ${_cart.restaurantName} đang được xử lý.\nThời gian giao hàng: 20-30 phút.",
-          style: TextStyle(color: TColor.secondaryText),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _cart.clear();
-              Navigator.of(context)
-                ..pop() // đóng dialog
-                ..pop(); // về restaurant detail
-            },
-            child: Text("OK", style: TextStyle(color: TColor.primaryDark)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showClearDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: true,
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text("Xoá giỏ hàng?"),
         content: const Text("Tất cả món ăn sẽ bị xoá."),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text("Huỷ", style: TextStyle(color: TColor.secondaryText)),
           ),
           TextButton(
             onPressed: () {
+              Navigator.of(dialogContext).pop();
               _cart.clear();
-              Navigator.pop(context);
             },
             child: Text("Xoá", style: TextStyle(color: TColor.red)),
           ),

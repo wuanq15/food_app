@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/common/globs.dart';
 import 'package:appfood/common_widget/round_button.dart';
 
 import 'package:appfood/common_widget/round_textfield.dart';
@@ -32,8 +33,7 @@ class _SignUpViewState extends State<SignUpView> {
     
     showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
     
-    // Đối với Emulator Android, localhost là 10.0.2.2. IOS/Web là localhost
-    final url = Uri.parse('http://localhost:3000/api/auth/register');
+    final url = Uri.parse(Globs.registerUrl);
     
     try {
       final response = await http.post(
@@ -41,7 +41,7 @@ class _SignUpViewState extends State<SignUpView> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'fullname': txtName.text,
-          'email': txtEmail.text,
+          'email': txtEmail.text.trim().toLowerCase(),
           'phone': txtMobile.text,
           'address': txtAddress.text,
           'password': txtPassword.text,
@@ -59,8 +59,13 @@ class _SignUpViewState extends State<SignUpView> {
           MaterialPageRoute(builder: (context) => const OtpView()),
         );
       } else {
-        final data = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? "Lỗi đăng ký")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              Globs.apiErrorMessage(response.body, fallback: 'Lỗi đăng ký'),
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (!mounted) return;

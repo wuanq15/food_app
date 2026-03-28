@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/common/globs.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -24,7 +25,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   Future<void> _fetchProfile() async {
     try {
-      final url = Uri.parse('http://localhost:3000/api/auth/profile');
+      final url = Uri.parse(Globs.profileUrl);
       final response = await http.get(url, headers: {
         'Content-Type': 'application/json'
       });

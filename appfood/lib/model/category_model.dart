@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:appfood/common/globs.dart';
 
 class CategoryModel {
   final String name;
@@ -22,7 +23,7 @@ class CategoryModel {
 
   static Future<List<CategoryModel>> fetchAll() async {
     try {
-      final url = Uri.parse('http://localhost:3000/api/food/categories');
+      final url = Uri.parse(Globs.categoriesUrl);
       final res = await http.get(url);
       if (res.statusCode == 200) {
         final List data = jsonDecode(res.body);

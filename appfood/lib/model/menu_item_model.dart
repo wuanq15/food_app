@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:appfood/common/globs.dart';
 
 class MenuItemModel {
   final String id;
@@ -41,9 +42,19 @@ class MenuItemModel {
     );
   }
 
+  static List<String> categoriesOf(List<MenuItemModel> items) {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final m in items) {
+      if (m.category.isEmpty) continue;
+      if (seen.add(m.category)) out.add(m.category);
+    }
+    return out;
+  }
+
   static Future<List<MenuItemModel>> fetchByRestaurant(String restaurantId) async {
     try {
-      final url = Uri.parse('http://localhost:3000/api/food/items?restaurantId=$restaurantId');
+      final url = Uri.parse('${Globs.itemsUrl}?restaurantId=$restaurantId');
       final res = await http.get(url);
       if (res.statusCode == 200) {
         final List data = jsonDecode(res.body);
@@ -55,7 +66,7 @@ class MenuItemModel {
 
   static Future<List<MenuItemModel>> fetchByCategory(String category) async {
     try {
-      final url = Uri.parse('http://localhost:3000/api/food/items?category=$category');
+      final url = Uri.parse('${Globs.itemsUrl}?category=$category');
       final res = await http.get(url);
       if (res.statusCode == 200) {
         final List data = jsonDecode(res.body);
@@ -67,7 +78,7 @@ class MenuItemModel {
 
   static Future<List<MenuItemModel>> search(String q) async {
     try {
-      final url = Uri.parse('http://localhost:3000/api/food/search?q=$q');
+      final url = Uri.parse('${Globs.searchUrl}?q=$q');
       final res = await http.get(url);
       if (res.statusCode == 200) {
         final List data = jsonDecode(res.body);

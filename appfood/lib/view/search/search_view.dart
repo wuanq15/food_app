@@ -170,7 +170,17 @@ class _SearchViewState extends State<SearchView> {
                                   MaterialPageRoute(
                                     builder: (context) => ItemDetailView(
                                       itemObj: {
+                                        "id": item.id,
+                                        "restaurant_id": item.restaurantId,
+                                        "restaurant_name": "",
                                         "name": item.name,
+                                        "price": item.price.toStringAsFixed(0),
+                                        "image": item.imageUrl.isNotEmpty
+                                            ? item.imageUrl
+                                            : "https://loremflickr.com/400/400/food?random=${item.id}",
+                                        "category": item.category,
+                                        "emoji": item.emoji,
+                                        "description": item.description,
                                         "type": item.category,
                                         "food_type": item.category,
                                         "rate": "4.9",

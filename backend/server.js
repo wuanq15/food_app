@@ -11,6 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ extended: false }));
 
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'appfood-api' });
+});
+
 // Define Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/food', foodRoutes);
@@ -19,6 +23,9 @@ app.get('/', (req, res) => {
   res.send('AppFood API is running...');
 });
 
-const PORT = process.env.PORT || 5000;
+// Mặc định 5050: macOS AirPlay Receiver hay chiếm 5000 và trả 403 cho HTTP.
+const PORT = process.env.PORT || 5050;
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server started on port ${PORT} (http://localhost:${PORT})`);
+});

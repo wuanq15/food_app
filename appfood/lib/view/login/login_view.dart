@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/common/globs.dart';
 import 'package:appfood/common_widget/round_button.dart';
 import 'package:appfood/common_widget/round_icon_button.dart';
 import 'package:appfood/common_widget/round_textfield.dart';
 import 'package:appfood/view/login/rest_password_view.dart';
 import 'package:appfood/view/login/sing_up_view.dart';
 import 'package:appfood/view/main_tabview/main_tabview.dart';
-import 'package:appfood/view/on_boarding/on_boarding_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -38,15 +38,14 @@ class _LoginViewState extends State<LoginView> {
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    // Đối với Emulator Android, localhost là 10.0.2.2. IOS/Web là localhost
-    final url = Uri.parse('http://localhost:3000/api/auth/login');
+    final url = Uri.parse(Globs.loginUrl);
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'email': txtEmail.text,
+          'email': txtEmail.text.trim().toLowerCase(),
           'password': txtPassword.text,
         }),
       );
@@ -65,9 +64,14 @@ class _LoginViewState extends State<LoginView> {
           (route) => false,
         );
       } else {
-        final data = jsonDecode(response.body);
+        final msg = Globs.apiErrorMessage(
+          response.body,
+          fallback: 'Mã ${response.statusCode}',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Lỗi đăng nhập")),
+          SnackBar(
+            content: Text('Đăng nhập thất bại (${response.statusCode}): $msg'),
+          ),
         );
       }
     } catch (e) {
@@ -91,7 +95,7 @@ class _LoginViewState extends State<LoginView> {
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    final url = Uri.parse('http://localhost:3000/api/auth/social');
+    final url = Uri.parse(Globs.socialLoginUrl);
     try {
       final response = await http.post(
         url,

@@ -66,10 +66,16 @@ const createTables = async () => {
     console.log('All Database tables initialized successfully');
 
     // Run seed data
+    const seed = require('./seed');
     try {
-      require('./seed').seedData(pool);
-    } catch(err) {
+      await seed.seedData(pool);
+    } catch (err) {
       console.log('Seed file not fully ready or error:', err.message);
+    }
+    try {
+      await seed.seedDemoUser(pool);
+    } catch (err) {
+      console.log('seedDemoUser error:', err.message);
     }
   } catch (error) {
     console.error('Error creating users table:', error);
