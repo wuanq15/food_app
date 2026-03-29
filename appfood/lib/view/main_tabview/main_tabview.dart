@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/view/home/home_view.dart';
-import 'package:appfood/view/menu/menu_view.dart'; // Màn hình Menu mới
-import 'package:appfood/view/order/order_view.dart'; // 'Offers'
-import 'package:appfood/view/profile/profile_view.dart'; // 'Profile'
+import 'package:appfood/view/menu/menu_view.dart';
+import 'package:appfood/view/order/order_view.dart';
+import 'package:appfood/view/profile/profile_view.dart';
+import 'package:appfood/view/more/more_view.dart';
 
 class MainTabView extends StatefulWidget {
   const MainTabView({super.key});
@@ -42,7 +43,7 @@ class _MainTabViewState extends State<MainTabView> {
           _buildNavigator(1, const OrderView()),
           _buildNavigator(2, const HomeView()),
           _buildNavigator(3, const ProfileView()),
-          _buildNavigator(4, Container(color: Colors.white)), // Placeholder
+          _buildNavigator(4, const MoreView()),
         ],
       ),
       backgroundColor: const Color(0xfff5f5f5),

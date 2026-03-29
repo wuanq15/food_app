@@ -59,7 +59,9 @@ class _MapPickerViewState extends State<MapPickerView> {
         return;
       }
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       final newPos = LatLng(pos.latitude, pos.longitude);
       _mapController.move(newPos, 16);
@@ -168,8 +170,8 @@ class _MapPickerViewState extends State<MapPickerView> {
               initialCenter: _selectedPosition,
               initialZoom: 15,
               onPositionChanged: (position, hasGesture) {
-                if (hasGesture && position.center != null) {
-                  _selectedPosition = position.center!;
+                if (hasGesture) {
+                  _selectedPosition = position.center;
                 }
               },
               onMapEvent: (event) {
@@ -235,7 +237,7 @@ class _MapPickerViewState extends State<MapPickerView> {
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, -4))
                 ],
@@ -300,9 +302,10 @@ class _MapPickerViewState extends State<MapPickerView> {
                             ? []
                             : [
                                 BoxShadow(
-                                    color: TColor.primary.withOpacity(0.4),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4))
+                                  color: TColor.primary.withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                )
                               ],
                       ),
                       child: Center(
@@ -434,7 +437,10 @@ class _MapPickerViewState extends State<MapPickerView> {
           color: Colors.white,
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 8,
+            ),
           ],
         ),
         child: Center(child: Icon(icon, color: Colors.black87, size: 22)),

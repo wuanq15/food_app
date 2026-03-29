@@ -2,6 +2,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_appfood_2024';
+const JWT_EXPIRES = '30d';
+
 // @route   POST /api/auth/register
 // @desc    Register a user
 const register = async (req, res) => {
@@ -37,8 +40,8 @@ const register = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET || 'secret_key_appfood_2024',
-      { expiresIn: '30d' },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES },
       (err, token) => {
         if (err) throw err;
         res.status(201).json({ token, user: newUser.rows[0] });
@@ -86,8 +89,8 @@ const login = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET || 'secret_key_appfood_2024',
-      { expiresIn: '30d' },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES },
       (err, token) => {
         if (err) throw err;
         const userWithoutPassword = { ...user };
@@ -154,11 +157,13 @@ const socialLogin = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET || 'super_secret_jwt_key_for_appfood_2024',
-      { expiresIn: '5h' },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES },
       (err, token) => {
         if (err) throw err;
-        res.json({ token, user });
+        const userWithoutPassword = { ...user };
+        delete userWithoutPassword.password;
+        res.json({ token, user: userWithoutPassword });
       }
     );
   } catch (err) {
@@ -167,9 +172,120 @@ const socialLogin = async (req, res) => {
   }
 };
 
+// POST /api/auth/forgot-password — tạo mã OTP 6 số (15 phút). Gửi email: mở rộng sau.
+// Đặt RESET_OTP_IN_RESPONSE=1 trong .env để API trả thêm debug_otp (demo / dev).
+const forgotPassword = async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+  if (!email) {
+    return res.status(400).json({ message: 'Vui lòng nhập email' });
+  }
+  try {
+    const userResult = await db.query(
+      'SELECT id FROM users WHERE LOWER(TRIM(email)) = $1',
+      [email],
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy tài khoản với email này' });
+    }
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await db.query('DELETE FROM password_resets WHERE email = $1', [email]);
+    await db.query(
+      'INSERT INTO password_resets (email, code, expires_at) VALUES ($1, $2, $3)',
+      [email, code, expiresAt],
+    );
+    console.log(`[password-reset] ${email} OTP=${code} (hết hạn sau 15 phút)`);
+    const body = {
+      message: 'Đã tạo mã xác nhận. Kiểm tra email (hoặc console server khi chưa cấu hình SMTP).',
+      expiresInMinutes: 15,
+    };
+    if (
+      process.env.RESET_OTP_IN_RESPONSE === '1' ||
+      process.env.RESET_OTP_IN_RESPONSE === 'true'
+    ) {
+      body.debug_otp = code;
+    }
+    return res.json(body);
+  } catch (err) {
+    console.error(err.message);
+    return res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// POST /api/auth/reset-password — { email, code, newPassword }
+const resetPassword = async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const code = req.body.code != null ? String(req.body.code).trim() : '';
+  const { newPassword } = req.body;
+  if (!email || !code || !newPassword) {
+    return res.status(400).json({ message: 'Thiếu email, mã OTP hoặc mật khẩu mới' });
+  }
+  if (String(newPassword).length < 6) {
+    return res.status(400).json({ message: 'Mật khẩu mới tối thiểu 6 ký tự' });
+  }
+  try {
+    const row = await db.query(
+      `SELECT id FROM password_resets WHERE email = $1 AND code = $2 AND expires_at > NOW()`,
+      [email, code],
+    );
+    if (row.rows.length === 0) {
+      return res.status(400).json({ message: 'Mã không đúng hoặc đã hết hạn' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(String(newPassword), salt);
+    await db.query('UPDATE users SET password = $1 WHERE LOWER(TRIM(email)) = $2', [
+      hashed,
+      email,
+    ]);
+    await db.query('DELETE FROM password_resets WHERE email = $1', [email]);
+    return res.json({ message: 'Đặt lại mật khẩu thành công' });
+  } catch (err) {
+    console.error(err.message);
+    return res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// PATCH /api/auth/profile
+const updateProfile = async (req, res) => {
+  const { fullname, phone, address } = req.body;
+  const updates = [];
+  const vals = [];
+  let i = 1;
+  if (fullname !== undefined && fullname !== null) {
+    updates.push(`fullname = $${i++}`);
+    vals.push(String(fullname).trim());
+  }
+  if (phone !== undefined && phone !== null) {
+    updates.push(`phone = $${i++}`);
+    vals.push(String(phone).trim());
+  }
+  if (address !== undefined && address !== null) {
+    updates.push(`address = $${i++}`);
+    vals.push(String(address).trim());
+  }
+  if (updates.length === 0) {
+    return res.status(400).json({ message: 'Không có dữ liệu cập nhật' });
+  }
+  try {
+    vals.push(req.user.id);
+    const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = $${i} RETURNING id, fullname, email, phone, address, created_at`;
+    const result = await db.query(sql, vals);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    return res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    return res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   socialLogin,
+  forgotPassword,
+  resetPassword,
+  updateProfile,
 };

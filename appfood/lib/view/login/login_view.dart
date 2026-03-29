@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import 'package:appfood/common/auth_store.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/common/globs.dart';
 import 'package:appfood/common_widget/round_button.dart';
@@ -54,10 +55,14 @@ class _LoginViewState extends State<LoginView> {
       Navigator.pop(context); // close dialog
 
       if (response.statusCode == 200) {
+        await AuthStore.saveTokenFromResponseBody(response.body);
+        if (!mounted) return;
 
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Đăng nhập thành công!")));
+        ).showSnackBar(
+          const SnackBar(content: Text("Đăng nhập thành công!")),
+        );
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const MainTabView()),
@@ -112,7 +117,8 @@ class _LoginViewState extends State<LoginView> {
       Navigator.pop(context); // close dialog
 
       if (response.statusCode == 200) {
-        // final data = jsonDecode(response.body);
+        await AuthStore.saveTokenFromResponseBody(response.body);
+        if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Đăng nhập $provider thành công!")),
@@ -215,38 +221,36 @@ class _LoginViewState extends State<LoginView> {
                 backgroundColor: const Color(0xff367FC0),
                 onPressed: () async {
                   try {
-                    print("Bắt đầu gọi Facebook SDK...");
                     final LoginResult result = await FacebookAuth.instance
                         .login(permissions: ['public_profile', 'email']);
+                    if (!context.mounted) return;
 
                     if (result.status == LoginStatus.success) {
-                      final userData = await FacebookAuth.instance
-                          .getUserData();
-                      print(
-                        "Facebook Login Success! Tên: ${userData['name']}",
-                      );
-                      _handleSocialLogin(
+                      final userData =
+                          await FacebookAuth.instance.getUserData();
+                      if (!context.mounted) return;
+                      await _handleSocialLogin(
                         'facebook',
-                        userData['email'] ?? "${userData['id']}@facebook.com",
+                        userData['email'] ??
+                            "${userData['id']}@facebook.com",
                         userData['name'] ?? 'Facebook User',
                         userData['id'] ?? '',
                       );
-                    } else {
-                      print("Facebook Login Status: ${result.status}");
-                      if (result.status == LoginStatus.failed) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Lỗi Facebook: ${result.message}"),
+                    } else if (result.status == LoginStatus.failed) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Lỗi Facebook: ${result.message}',
                           ),
-                        );
-                      }
+                        ),
+                      );
                     }
-                  } catch (error) {
-                    print("Facebook Login Error: \$error");
+                  } catch (_) {
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                         content: Text(
-                          "Yêu cầu cấu hình App ID Facebook để dùng tính năng này.",
+                          'Yêu cầu cấu hình App ID Facebook để dùng tính năng này.',
                         ),
                       ),
                     );
@@ -263,29 +267,24 @@ class _LoginViewState extends State<LoginView> {
 
                 onPressed: () async {
                   try {
-                    print("Bắt đầu gọi Google SDK...");
                     final GoogleSignIn googleSignIn = GoogleSignIn();
-                    // Đăng xuất rỗng trước để force chọn tài khoản (tuỳ chọn)
-                    // await googleSignIn.signOut();
-                    final GoogleSignInAccount? googleUser = await googleSignIn
-                        .signIn();
-
+                    final GoogleSignInAccount? googleUser =
+                        await googleSignIn.signIn();
+                    if (!context.mounted) return;
                     if (googleUser != null) {
-                      print(
-                        "Google Login Success! Tên: ${googleUser.displayName}",
-                      );
-                      // Đẩy thông tin lên Backend Auth của chúng ta
-                      _handleSocialLogin(
+                      await _handleSocialLogin(
                         'google',
                         googleUser.email,
                         googleUser.displayName ?? 'Google User',
                         googleUser.id,
                       );
                     }
-                  } catch (error) {
-                    print("Google Login Error: \$error");
+                  } catch (e) {
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Lỗi Google Sign In: \$error")),
+                      SnackBar(
+                        content: Text('Lỗi Google Sign In: $e'),
+                      ),
                     );
                   }
                 },

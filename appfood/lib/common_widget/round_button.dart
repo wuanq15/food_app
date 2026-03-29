@@ -50,8 +50,8 @@ class _RoundButtonState extends State<RoundButton> {
           onHighlightChanged: (v) {
             setState(() => _pressed = v);
           },
-          splashColor: Colors.white.withOpacity(0.2),
-          highlightColor: Colors.white.withOpacity(0.1),
+          splashColor: Colors.white.withValues(alpha: 0.2),
+          highlightColor: Colors.white.withValues(alpha: 0.1),
           child: Container(
             height: 56,
             alignment: Alignment.center,
@@ -62,7 +62,7 @@ class _RoundButtonState extends State<RoundButton> {
                   ? []
                   : [
                       BoxShadow(
-                        color: bgColor.withOpacity(0.35),
+                        color: bgColor.withValues(alpha: 0.35),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

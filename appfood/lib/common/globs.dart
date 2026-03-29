@@ -34,6 +34,7 @@ class Globs {
   static String get searchUrl => '$baseUrl/api/food/search';
   static String get categoriesUrl => '$baseUrl/api/food/categories';
   static String get checkoutUrl => '$baseUrl/api/food/checkout';
+  static String get myOrdersUrl => '$baseUrl/api/food/my-orders';
 
   /// JSON `{ "message": "..." }` hoặc chuỗi thường từ server (vd. 500).
   static String apiErrorMessage(String body, {String fallback = 'Lỗi'}) {

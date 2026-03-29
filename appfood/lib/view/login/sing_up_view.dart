@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import 'package:appfood/common/auth_store.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/common/globs.dart';
 import 'package:appfood/common_widget/round_button.dart';
 
 import 'package:appfood/common_widget/round_textfield.dart';
 import 'package:appfood/view/login/login_view.dart';
-import 'package:appfood/view/login/otp_view.dart';
+import 'package:appfood/view/main_tabview/main_tabview.dart';
 import 'package:flutter/material.dart';
 
 class SignUpView extends StatefulWidget {
@@ -52,11 +53,16 @@ class _SignUpViewState extends State<SignUpView> {
       Navigator.pop(context); // close dialog
       
       if (response.statusCode == 201) {
-        
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đăng ký thành công!")));
-        Navigator.push(
+        await AuthStore.saveTokenFromResponseBody(response.body);
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Đăng ký thành công!")),
+        );
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const OtpView()),
+          MaterialPageRoute(builder: (_) => const MainTabView()),
+          (route) => false,
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

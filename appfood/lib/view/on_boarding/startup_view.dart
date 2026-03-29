@@ -2,8 +2,6 @@ import 'package:appfood/common/color_extension.dart';
 import 'package:flutter/material.dart';
 
 import '../login/welcome_view.dart';
-import '../main_tabview/main_tabview.dart';
-import 'on_boarding_view.dart';
 
 class StartupView extends StatefulWidget {
   const StartupView({super.key});
@@ -19,9 +17,9 @@ class _StartupViewState extends State<StartupView> {
     goNext();
   }
 
-  void goNext() async {
+  Future<void> goNext() async {
     await Future.delayed(const Duration(seconds: 4));
-
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const WelcomeView()),

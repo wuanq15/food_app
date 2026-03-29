@@ -10,7 +10,7 @@ class CartItem {
   double get subtotal => item.price * quantity;
 }
 
-/// Một giỏ singleton; gộp món từ mọi màn, không xoá giỏ khi đổi nhà hàng.
+/// Một giỏ singleton toàn app; thanh toán qua API — mỗi đơn chỉ một nhà hàng.
 class CartManager extends ChangeNotifier {
   static final CartManager _instance = CartManager._internal();
   factory CartManager() => _instance;
@@ -141,6 +141,6 @@ class CartManager extends ChangeNotifier {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]}.',
     );
-    return '${formatted}đ';
+    return '$formatted' 'đ';
   }
 }

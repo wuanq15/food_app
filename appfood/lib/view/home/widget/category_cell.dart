@@ -33,7 +33,10 @@ class CategoryCell extends StatelessWidget {
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
-                        BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 5, offset: const Offset(0, 3)),
+                        BoxShadow(
+                            color: Colors.orange.withValues(alpha: 0.3),
+                            blurRadius: 5,
+                            offset: const Offset(0, 3)),
                       ],
                     ),
                     child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 36),

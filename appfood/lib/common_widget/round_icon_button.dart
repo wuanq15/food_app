@@ -45,8 +45,8 @@ class _RoundIconButtonState extends State<RoundIconButton> {
           onHighlightChanged: (v) {
             setState(() => _pressed = v);
           },
-          splashColor: Colors.white.withOpacity(0.25),
-          highlightColor: Colors.white.withOpacity(0.1),
+          splashColor: Colors.white.withValues(alpha: 0.25),
+          highlightColor: Colors.white.withValues(alpha: 0.1),
           child: Container(
             width: double.infinity,
             height: 56,
@@ -58,7 +58,7 @@ class _RoundIconButtonState extends State<RoundIconButton> {
                   ? []
                   : [
                       BoxShadow(
-                        color: bgColor.withOpacity(0.35),
+                        color: bgColor.withValues(alpha: 0.35),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),

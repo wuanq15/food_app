@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:appfood/common_widget/round_button.dart';
 import 'package:appfood/view/login/login_view.dart';
+import 'package:appfood/view/login/sing_up_view.dart';
 import 'package:flutter/material.dart';
 import 'package:appfood/common/color_extension.dart';
 
@@ -35,9 +36,10 @@ class WelcomeView extends StatelessWidget {
                   width: 350,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3)),
                   ),
 
                   /// 🔽 NỘI DUNG TRONG KHUNG
@@ -95,8 +97,14 @@ class WelcomeView extends StatelessWidget {
                         width: MediaQuery.of(context).size.width * 0.7,
                         child: RoundButton(
                           title: "Create an Account",
-
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SignUpView(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
