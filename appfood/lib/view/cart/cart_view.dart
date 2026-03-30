@@ -28,6 +28,10 @@ class _CartViewState extends State<CartView> {
   String _paymentMethod = 'cod';
   bool _isCheckingOut = false;
 
+  // Voucher áp dụng cho đơn (demo: hardcode 3 mã).
+  final TextEditingController _voucherCodeController = TextEditingController();
+  String _appliedVoucherCode = ''; // FREESHIP | GIAM20K | MONKEY10
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +90,7 @@ class _CartViewState extends State<CartView> {
   void dispose() {
     _receiverName.dispose();
     _receiverPhone.dispose();
+    _voucherCodeController.dispose();
     _cart.removeListener(_rebuild);
     super.dispose();
   }
@@ -100,6 +105,51 @@ class _CartViewState extends State<CartView> {
       default:
         return 'Thanh toán khi nhận hàng (COD)';
     }
+  }
+
+  // ── VOUCHER (demo) ──
+  static const Set<String> _voucherCodes = {
+    'FREESHIP',
+    'GIAM20K',
+    'MONKEY10',
+  };
+
+  String _normalizeVoucher(String? code) {
+    return (code ?? '').trim().toUpperCase();
+  }
+
+  bool _isVoucherAllowed(String code) => _voucherCodes.contains(code);
+
+  double _voucherDeliveryFee() {
+    if (_appliedVoucherCode == 'FREESHIP') return 0;
+    return _cart.deliveryFee;
+  }
+
+  double _voucherDiscountAmount() {
+    if (_appliedVoucherCode == 'GIAM20K') {
+      final totalBeforeDiscount = _cart.subtotal + _cart.deliveryFee;
+      return totalBeforeDiscount <= 0
+          ? 0.0
+          : (totalBeforeDiscount >= 20000 ? 20000.0 : totalBeforeDiscount);
+    }
+    if (_appliedVoucherCode == 'MONKEY10') {
+      final totalBeforeDiscount = _cart.subtotal + _cart.deliveryFee;
+      final d = _cart.subtotal * 0.1;
+      final capped = d > 30000.0 ? 30000.0 : d;
+      return totalBeforeDiscount <= 0
+          ? 0.0
+          : (capped >= totalBeforeDiscount
+              ? totalBeforeDiscount
+              : capped);
+    }
+    return 0.0;
+  }
+
+  double _voucherTotalPrice() {
+    final deliveryFee = _voucherDeliveryFee();
+    final discount = _voucherDiscountAmount();
+    final total = _cart.subtotal + deliveryFee - discount;
+    return total < 0 ? 0 : total;
   }
 
   void _rebuild() => setState(() {});
@@ -158,17 +208,32 @@ class _CartViewState extends State<CartView> {
       return;
     }
 
+    // Validate voucher code from input (demo: hardcode 3 mã).
+    final inputVoucher = _normalizeVoucher(_voucherCodeController.text);
+    if (inputVoucher.isNotEmpty) {
+      if (!_isVoucherAllowed(inputVoucher)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mã ưu đãi không hợp lệ')),
+        );
+        return;
+      }
+      _appliedVoucherCode = inputVoucher;
+    } else {
+      _appliedVoucherCode = '';
+    }
+
     setState(() => _isCheckingOut = true);
     try {
       final url = Uri.parse(Globs.checkoutUrl);
       final body = jsonEncode({
-        'total_price': _cart.total,
+        'total_price': _voucherTotalPrice(),
         'delivery_address': _deliveryAddress,
         if (_deliveryLatLng != null) 'delivery_lat': _deliveryLatLng!.latitude,
         if (_deliveryLatLng != null) 'delivery_lng': _deliveryLatLng!.longitude,
         'receiver_name': name,
         'receiver_phone': phone,
         'payment_method': _paymentMethod,
+        if (_appliedVoucherCode.isNotEmpty) 'voucher_code': _appliedVoucherCode,
         'items': _cart.items
             .map(
               (e) => {
@@ -205,7 +270,11 @@ class _CartViewState extends State<CartView> {
         );
         if (!mounted) return;
         _cart.clear();
-        setState(() => _paymentMethod = 'cod');
+        setState(() {
+          _paymentMethod = 'cod';
+          _appliedVoucherCode = '';
+          _voucherCodeController.clear();
+        });
         await showDialog<void>(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -693,6 +762,9 @@ class _CartViewState extends State<CartView> {
   // ── ORDER SUMMARY ──
   Widget _buildOrderSummary(BuildContext context) {
     final blockedMulti = _cart.hasMultipleRestaurants;
+    final deliveryFee = _voucherDeliveryFee();
+    final discount = _voucherDiscountAmount();
+    final total = _voucherTotalPrice();
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: BoxDecoration(
@@ -731,8 +803,85 @@ class _CartViewState extends State<CartView> {
           const SizedBox(height: 8),
           _summaryRow(
             "Phí giao hàng",
-            CartManager.formatPrice(_cart.deliveryFee),
-            hint: _cart.subtotal >= 150000 ? "Miễn phí từ 150k" : null,
+            CartManager.formatPrice(deliveryFee),
+            hint: _appliedVoucherCode == 'FREESHIP'
+                ? "Miễn phí theo voucher"
+                : (_cart.subtotal >= 150000 ? "Miễn phí từ 150k" : null),
+          ),
+          const SizedBox(height: 8),
+          if (_appliedVoucherCode.isNotEmpty && discount > 0) ...[
+            _summaryRow(
+              "Giảm giá",
+              '-${CartManager.formatPrice(discount)}',
+            ),
+            const SizedBox(height: 8),
+          ],
+          // Mã ưu đãi (demo hardcode 3 voucher).
+          Text(
+            'Mã ưu đãi',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: TColor.secondaryText,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _voucherCodeController,
+                  decoration: InputDecoration(
+                    hintText: 'Nhập mã: FREESHIP / GIAM20K / MONKEY10',
+                    filled: true,
+                    fillColor: TColor.textfield,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                height: 44,
+                child: FilledButton(
+                  onPressed: () {
+                    final code = _normalizeVoucher(_voucherCodeController.text);
+                    if (code.isEmpty) {
+                      setState(() => _appliedVoucherCode = '');
+                      return;
+                    }
+                    if (!_isVoucherAllowed(code)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Mã ưu đãi không hợp lệ')),
+                      );
+                      return;
+                    }
+                    setState(() => _appliedVoucherCode = code);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã áp mã ưu đãi')),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: TColor.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Áp dụng',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Row(
@@ -763,7 +912,7 @@ class _CartViewState extends State<CartView> {
           const Divider(height: 20),
           _summaryRow(
             "Tổng cộng",
-            CartManager.formatPrice(_cart.total),
+            CartManager.formatPrice(total),
             isBold: true,
           ),
           const SizedBox(height: 16),

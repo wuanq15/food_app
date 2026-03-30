@@ -1,5 +1,6 @@
 import 'package:appfood/common/color_extension.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class VouchersView extends StatelessWidget {
   const VouchersView({super.key});
@@ -114,6 +115,7 @@ class VouchersView extends StatelessWidget {
                     ),
                     IconButton(
                       onPressed: () {
+                        Clipboard.setData(ClipboardData(text: v.code));
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Đã sao chép mã ${v.code}')),
                         );

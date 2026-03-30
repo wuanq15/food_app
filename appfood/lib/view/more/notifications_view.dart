@@ -5,12 +5,30 @@ class NotificationsView extends StatelessWidget {
   const NotificationsView({super.key});
 
   /// Dùng badge trên tab Khác (demo).
-  static int get badgeCount => _items.length;
+  static int get badgeCount => _items.where((e) => e.unread).length;
 
   static final _items = [
-    _Notif('Khuyến mãi', 'Giảm 20% đơn đầu tiên hôm nay — áp dụng mã MONKEY10.', '2 giờ trước', Icons.local_offer_outlined),
-    _Notif('Đơn hàng', 'Đơn #1042 của bạn đang được chuẩn bị.', 'Hôm qua', Icons.receipt_long_outlined),
-    _Notif('Giao hàng', 'Shipper đang trên đường — dự kiến 10 phút nữa tới.', '3 ngày trước', Icons.delivery_dining_outlined),
+    _Notif(
+      'Khuyến mãi',
+      'Giảm 20% đơn đầu tiên hôm nay — áp dụng mã MONKEY10.',
+      '2 giờ trước',
+      Icons.local_offer_outlined,
+      unread: true,
+    ),
+    _Notif(
+      'Đơn hàng',
+      'Đơn #1042 của bạn đang được chuẩn bị.',
+      'Hôm qua',
+      Icons.receipt_long_outlined,
+      unread: true,
+    ),
+    _Notif(
+      'Giao hàng',
+      'Shipper đang trên đường — dự kiến 10 phút nữa tới.',
+      '3 ngày trước',
+      Icons.delivery_dining_outlined,
+      unread: false,
+    ),
   ];
 
   @override
@@ -18,7 +36,7 @@ class NotificationsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xfff5f5f5),
       appBar: AppBar(
-        backgroundColor: TColor.white,
+        backgroundColor: TColor.background,
         elevation: 0,
         iconTheme: IconThemeData(color: TColor.primaryText),
         title: Text(
@@ -37,13 +55,19 @@ class NotificationsView extends StatelessWidget {
         itemBuilder: (context, i) {
           final n = _items[i];
           return Material(
-            color: Colors.white,
             borderRadius: BorderRadius.circular(14),
+            color: Colors.white,
             child: ListTile(
-              contentPadding: const EdgeInsets.all(14),
-              leading: CircleAvatar(
-                backgroundColor: TColor.primary.withValues(alpha: 0.12),
-                child: Icon(n.icon, color: TColor.primary),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              leading: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: TColor.primary.withValues(alpha: 0.10),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(n.icon, color: TColor.primary, size: 22),
               ),
               title: Text(
                 n.title,
@@ -64,9 +88,25 @@ class NotificationsView extends StatelessWidget {
                 ),
               ),
               isThreeLine: true,
-              trailing: Text(
-                n.time,
-                style: TextStyle(fontSize: 11, color: TColor.placeholder),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (n.unread) ...[
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: TColor.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    n.time,
+                    style: TextStyle(fontSize: 11, color: TColor.placeholder),
+                  ),
+                ],
               ),
             ),
           );
@@ -77,9 +117,16 @@ class NotificationsView extends StatelessWidget {
 }
 
 class _Notif {
-  _Notif(this.title, this.body, this.time, this.icon);
+  _Notif(
+    this.title,
+    this.body,
+    this.time,
+    this.icon, {
+    required this.unread,
+  });
   final String title;
   final String body;
   final String time;
   final IconData icon;
+  final bool unread;
 }

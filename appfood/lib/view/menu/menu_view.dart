@@ -77,7 +77,7 @@ class _MenuViewState extends State<MenuView> {
                 child: Container(
                   height: 50,
                   decoration: BoxDecoration(
-                    color: TColor.textfield,
+                    color: const Color(0xfff2f2f2),
                     borderRadius: BorderRadius.circular(25),
                   ),
                   child: Row(
@@ -86,7 +86,7 @@ class _MenuViewState extends State<MenuView> {
                       Icon(Icons.search, color: TColor.secondaryText),
                       const SizedBox(width: 10),
                       Text(
-                        "Tìm kiếm món ăn",
+                        "Search food",
                         style: TextStyle(color: TColor.placeholder, fontSize: 14),
                       ),
                     ],
@@ -105,7 +105,7 @@ class _MenuViewState extends State<MenuView> {
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    width: 100, // About a third or 100px width
+                    width: 90, 
                     child: Container(
                       decoration: BoxDecoration(
                         color: TColor.primary,
@@ -119,10 +119,7 @@ class _MenuViewState extends State<MenuView> {
 
                   // Menu List
                   ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 20,
-                      horizontal: 20,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     itemCount: menuArr.length,
                     itemBuilder: (context, index) {
                       var data = menuArr[index];
@@ -139,98 +136,103 @@ class _MenuViewState extends State<MenuView> {
                           margin: const EdgeInsets.only(bottom: 25),
                           child: Stack(
                             alignment: Alignment.centerLeft,
+                            clipBehavior: Clip.none,
                             children: [
                               // The White Card
                               Container(
-                                margin: const EdgeInsets.only(left: 45),
-                                padding: const EdgeInsets.fromLTRB(
-                                  45,
-                                  20,
-                                  20,
-                                  20,
-                                ),
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(left: 60, right: 30),
+                                padding: const EdgeInsets.only(left: 60, top: 25, bottom: 25, right: 20),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(35),
-                                    bottomLeft: Radius.circular(35),
+                                    topLeft: Radius.circular(50),
+                                    bottomLeft: Radius.circular(50),
                                     topRight: Radius.circular(15),
                                     bottomRight: Radius.circular(15),
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withValues(alpha: 0.05),
-                                      blurRadius: 10,
+                                      blurRadius: 15,
                                       offset: const Offset(0, 5),
                                     ),
                                   ],
                                 ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          data.name,
-                                          style: TextStyle(
-                                            color: TColor.primaryText,
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "${data.itemsCount} món",
-                                          style: TextStyle(
-                                            color: TColor.secondaryText,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Container(
-                                      width: 35,
-                                      height: 35,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.05),
-                                            blurRadius: 5,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
+                                    Text(
+                                      data.name,
+                                      style: TextStyle(
+                                        color: TColor.primaryText,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
                                       ),
-                                      child: Icon(
-                                        Icons.arrow_forward_ios_rounded,
-                                        color: TColor.primary,
-                                        size: 16,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      "${data.itemsCount} Items",
+                                      style: TextStyle(
+                                        color: TColor.secondaryText,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              // The Circular Image Overlapping
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
+
+                              // The Circular Image Overlapping on the left
+                              Positioned(
+                                left: 20,
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 10,
+                                        offset: Offset(0, 4),
+                                      )
+                                    ]
+                                  ),
+                                  child: ClipOval(
+                                    child: SmartImage(
+                                      data.imageUrl,
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
-                                padding: const EdgeInsets.all(5),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(35),
-                                  child: SmartImage(
-                                    data.imageUrl,
-                                    width: 70,
-                                    height: 70,
-                                    fit: BoxFit.cover,
+                              ),
+
+                              // The Arrow button intersecting the right
+                              Positioned(
+                                right: 12,
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.08),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    color: TColor.primary,
+                                    size: 16,
                                   ),
                                 ),
                               ),

@@ -5,7 +5,6 @@ import 'package:appfood/common/auth_store.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/common/globs.dart';
 import 'package:appfood/common_widget/round_button.dart';
-import 'package:appfood/common_widget/round_icon_button.dart';
 import 'package:appfood/common_widget/round_textfield.dart';
 import 'package:appfood/view/login/rest_password_view.dart';
 import 'package:appfood/view/login/sing_up_view.dart';
@@ -142,6 +141,55 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
+  Widget _socialLoginButton({
+    required String title,
+    required String iconAsset,
+    required Color backgroundColor,
+    required VoidCallback onPressed,
+  }) {
+    const radius = 28.0;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withValues(alpha: 0.32),
+            blurRadius: 14,
+            spreadRadius: 1,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(radius),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(radius),
+          onTap: onPressed,
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(iconAsset, width: 24, height: 24),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -215,9 +263,9 @@ class _LoginViewState extends State<LoginView> {
                 ),
               ),
               SizedBox(height: 35),
-              RoundIconButton(
+              _socialLoginButton(
                 title: "Login with Facebook",
-                icon: "assets/img/facebook_logo.png",
+                iconAsset: "assets/img/facebook_logo.png",
                 backgroundColor: const Color(0xff367FC0),
                 onPressed: () async {
                   try {
@@ -260,11 +308,10 @@ class _LoginViewState extends State<LoginView> {
 
               SizedBox(height: 25),
 
-              RoundIconButton(
+              _socialLoginButton(
                 title: "Login with Google",
-                icon: "assets/img/google_logo.png",
+                iconAsset: "assets/img/google_logo.png",
                 backgroundColor: const Color(0xFF6F0706),
-
                 onPressed: () async {
                   try {
                     final GoogleSignIn googleSignIn = GoogleSignIn();

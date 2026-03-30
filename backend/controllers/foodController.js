@@ -71,6 +71,7 @@ exports.checkout = async (req, res) => {
       receiver_name: receiverNameRaw,
       receiver_phone: receiverPhoneRaw,
       payment_method: paymentMethodRaw,
+      voucher_code: voucherCodeRaw,
       items,
     } = req.body;
 
@@ -148,8 +149,40 @@ exports.checkout = async (req, res) => {
     const restaurantId = restaurantIds[0];
 
     const subtotal = normalized.reduce((s, i) => s + i.lineTotal, 0);
-    const deliveryFee = subtotal > 150000 ? 0 : 15000;
-    const expectedTotal = subtotal + deliveryFee;
+    let deliveryFee = subtotal > 150000 ? 0 : 15000;
+
+    const voucherCode = String(voucherCodeRaw || '')
+      .trim()
+      .toUpperCase();
+    let discount = 0;
+
+    if (voucherCode) {
+      switch (voucherCode) {
+        case 'FREESHIP':
+          deliveryFee = 0;
+          discount = 0;
+          break;
+        case 'GIAM20K': {
+          // Giảm tối đa đến 20.000đ (capped theo tổng trước giảm để tránh âm)
+          const totalBeforeDiscount = subtotal + deliveryFee;
+          discount = Math.min(20000, totalBeforeDiscount);
+          break;
+        }
+        case 'MONKEY10': {
+          // Giảm 10% nhưng tối đa 30.000đ
+          const totalBeforeDiscount = subtotal + deliveryFee;
+          const d = subtotal * 0.1;
+          discount = Math.min(30000, d, totalBeforeDiscount);
+          break;
+        }
+        default:
+          return res
+            .status(400)
+            .json({ message: 'Mã ưu đãi không hợp lệ' });
+      }
+    }
+
+    const expectedTotal = Math.max(0, subtotal + deliveryFee - discount);
     const clientTotal = parseFloat(totalPriceRaw);
     if (
       !Number.isFinite(clientTotal) ||

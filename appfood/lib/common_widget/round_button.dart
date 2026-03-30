@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../common/color_extension.dart';
 
-enum RoundButtonType { bgPrimary, textPrimary }
-
 class RoundButton extends StatefulWidget {
   final VoidCallback onPressed;
   final String title;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:appfood/common/cart_nav.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/model/restaurant_model.dart';
@@ -15,6 +16,11 @@ class OrderView extends StatefulWidget {
 class _OrderViewState extends State<OrderView> {
   List<RestaurantModel> _offerItems = [];
   bool _isLoading = true;
+  static const List<String> _promoCodes = <String>[
+    'FREESHIP',
+    'GIAM20K',
+    'MONKEY10',
+  ];
 
   @override
   void initState() {
@@ -77,26 +83,7 @@ class _OrderViewState extends State<OrderView> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      width: 150,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        color: TColor.primary,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        "Kiểm tra Ưu đãi",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const SizedBox.shrink(),
                 ],
               ),
             ),
@@ -105,9 +92,12 @@ class _OrderViewState extends State<OrderView> {
             // List of Offers
             Expanded(
               child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: 20, top: 5),
+                physics: const BouncingScrollPhysics(),
                 itemCount: _offerItems.length,
                 itemBuilder: (context, index) {
                   var restaurant = _offerItems[index];
+                  final promoCode = _promoCodes[index % _promoCodes.length];
 
                   return GestureDetector(
                     onTap: () {
@@ -119,95 +109,181 @@ class _OrderViewState extends State<OrderView> {
                         ),
                       );
                     },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Image edge-to-edge with Stack for Badge
-                        Stack(
-                          children: [
-                            SmartImage(
-                              restaurant.imageUrl,
-                              width: double.infinity,
-                              height: 200,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                width: double.infinity,
-                                height: 200,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.restaurant, color: Colors.grey, size: 50),
-                              ),
-                            ),
-                            Positioned(
-                              top: 15,
-                              left: 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: const BoxDecoration(
-                                  color: Colors.redAccent,
-                                  borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(8),
-                                    bottomRight: Radius.circular(8),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Image with rounded top corners and Stack for Badge
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                child: SmartImage(
+                                  restaurant.imageUrl,
+                                  width: double.infinity,
+                                  height: 180,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    width: double.infinity,
+                                    height: 180,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.restaurant, color: Colors.grey, size: 40),
                                   ),
                                 ),
-                                child: const Row(
+                              ),
+                              Positioned(
+                                top: 12,
+                                right: 12,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xffFF4B4B),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xffFF4B4B)
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.local_offer_rounded, color: Colors.white, size: 14),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        "Giảm 30%",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Details text below
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  restaurant.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: TColor.primaryText,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Icon(Icons.local_fire_department_rounded, color: Colors.amber, size: 16),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      "Giảm sốc 30%",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.star_rounded, color: TColor.primary, size: 16),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                "${restaurant.rating}",
+                                                style: TextStyle(
+                                                  color: TColor.primaryText,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                "(${restaurant.reviewCount} đánh giá)",
+                                                style: TextStyle(
+                                                  color: TColor.secondaryText,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            "${restaurant.type1} • ${restaurant.type2}",
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: TColor.secondaryText,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    // Action Button
+                                    GestureDetector(
+                                      onTap: () {
+                                        Clipboard.setData(
+                                          ClipboardData(text: promoCode),
+                                        );
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Đã lấy mã $promoCode',
+                                            ),
+                                            duration:
+                                                const Duration(seconds: 2),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: TColor.primary,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: const Text(
+                                          "Lấy mã",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                        // Details text below
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                restaurant.name,
-                                style: TextStyle(
-                                  color: TColor.primaryText,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(Icons.star, color: TColor.primary, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "${restaurant.rating} (${restaurant.reviewCount} đánh giá)",
-                                    style: TextStyle(
-                                      color: TColor.primary,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    "${restaurant.type1}   ·   ${restaurant.type2}",
-                                    style: TextStyle(
-                                      color: TColor.secondaryText,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },

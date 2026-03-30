@@ -137,6 +137,10 @@ class _MoreTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final count = trailingBadge == null ? 0 : int.tryParse(trailingBadge!) ?? 0;
+    final showBadge = count > 0;
+    final badgeText = count > 99 ? '99+' : '$count';
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -144,14 +148,27 @@ class _MoreTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Ink(
           decoration: BoxDecoration(
-            color: const Color(0xffebebeb),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black12),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
             child: Row(
               children: [
-                Icon(icon, size: 26, color: TColor.primaryText),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: TColor.primary.withValues(alpha: 0.10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 22,
+                    color: TColor.primary,
+                  ),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
@@ -163,17 +180,18 @@ class _MoreTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (trailingBadge != null) ...[
+                if (showBadge) ...[
                   Container(
-                    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(
                       color: Color(0xffE53935),
                       shape: BoxShape.circle,
                     ),
                     child: Text(
-                      trailingBadge!,
+                      badgeText,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
