@@ -62,7 +62,7 @@ class _StartupViewState extends State<StartupView> {
             child: Column(
               children: [
                 Text(
-                  "MealMonkey",
+                  "FastBite",
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,

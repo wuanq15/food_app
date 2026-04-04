@@ -105,7 +105,7 @@ exports.checkout = async (req, res) => {
       return res.status(400).json({ message: 'Giỏ hàng trống' });
     }
 
-    const normalized = items
+    const parsed = items
       .map((row) => {
         const restaurantId = String(
           row.restaurantId || row.restaurant_id || '',
@@ -113,33 +113,19 @@ exports.checkout = async (req, res) => {
         const menuItemId = String(
           row.menuItemId || row.menu_item_id || '',
         ).trim();
-        const name = String(row.name || '').trim() || 'Món';
         const quantity = parseInt(String(row.quantity), 10);
-        const price = parseFloat(row.price);
-        if (
-          !restaurantId ||
-          !menuItemId ||
-          quantity < 1 ||
-          !Number.isFinite(price)
-        ) {
+        if (!restaurantId || !menuItemId || quantity < 1 || !Number.isFinite(quantity)) {
           return null;
         }
-        return {
-          restaurantId,
-          menuItemId,
-          name,
-          quantity,
-          unitPrice: price,
-          lineTotal: quantity * price,
-        };
+        return { restaurantId, menuItemId, quantity };
       })
       .filter(Boolean);
 
-    if (normalized.length !== items.length) {
+    if (parsed.length !== items.length) {
       return res.status(400).json({ message: 'Dữ liệu món không hợp lệ' });
     }
 
-    const restaurantIds = [...new Set(normalized.map((i) => i.restaurantId))];
+    const restaurantIds = [...new Set(parsed.map((i) => i.restaurantId))];
     if (restaurantIds.length !== 1) {
       return res.status(400).json({
         message:
@@ -147,6 +133,38 @@ exports.checkout = async (req, res) => {
       });
     }
     const restaurantId = restaurantIds[0];
+
+    const uniqMenuIds = [...new Set(parsed.map((i) => i.menuItemId))];
+    const priceResult = await pool.query(
+      `SELECT id, name, price FROM menu_items
+       WHERE restaurant_id = $1 AND id = ANY($2::varchar[])`,
+      [restaurantId, uniqMenuIds],
+    );
+    if (priceResult.rows.length !== uniqMenuIds.length) {
+      return res.status(400).json({
+        message: 'Một hoặc nhiều món không tồn tại hoặc không thuộc nhà hàng này',
+      });
+    }
+    const metaById = new Map(priceResult.rows.map((r) => [r.id, r]));
+
+    const normalized = parsed.map((p) => {
+      const m = metaById.get(p.menuItemId);
+      const unitPrice = parseFloat(String(m.price));
+      if (!Number.isFinite(unitPrice)) return null;
+      const name = String(m.name || '').trim() || 'Món';
+      return {
+        restaurantId: p.restaurantId,
+        menuItemId: p.menuItemId,
+        name,
+        quantity: p.quantity,
+        unitPrice,
+        lineTotal: p.quantity * unitPrice,
+      };
+    }).filter(Boolean);
+
+    if (normalized.length !== parsed.length) {
+      return res.status(400).json({ message: 'Dữ liệu giá món không hợp lệ' });
+    }
 
     const subtotal = normalized.reduce((s, i) => s + i.lineTotal, 0);
     let deliveryFee = subtotal > 150000 ? 0 : 15000;

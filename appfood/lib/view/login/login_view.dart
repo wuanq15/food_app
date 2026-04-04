@@ -269,13 +269,17 @@ class _LoginViewState extends State<LoginView> {
                 backgroundColor: const Color(0xff367FC0),
                 onPressed: () async {
                   try {
+                    // Chỉ xin public_profile: quyền `email` phải bật trong Meta
+                    // (Use cases / Quyền) — nếu không sẽ lỗi "Invalid Scopes: email".
                     final LoginResult result = await FacebookAuth.instance
-                        .login(permissions: ['public_profile', 'email']);
+                        .login(permissions: ['public_profile']);
                     if (!context.mounted) return;
 
                     if (result.status == LoginStatus.success) {
                       final userData =
-                          await FacebookAuth.instance.getUserData();
+                          await FacebookAuth.instance.getUserData(
+                        fields: 'id,name,picture.width(200)',
+                      );
                       if (!context.mounted) return;
                       await _handleSocialLogin(
                         'facebook',

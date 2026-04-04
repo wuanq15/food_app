@@ -10,7 +10,7 @@ class NotificationsView extends StatelessWidget {
   static final _items = [
     _Notif(
       'Khuyến mãi',
-      'Giảm 20% đơn đầu tiên hôm nay — áp dụng mã MONKEY10.',
+      'Giảm 20% đơn đầu tiên hôm nay — xem mã trong mục Voucher.',
       '2 giờ trước',
       Icons.local_offer_outlined,
       unread: true,

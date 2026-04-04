@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const { getJwtSecret } = require('../config/jwtSecret');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_appfood_2024';
 const JWT_EXPIRES = '30d';
 
 // @route   POST /api/auth/register
@@ -40,7 +40,7 @@ const register = async (req, res) => {
 
     jwt.sign(
       payload,
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES },
       (err, token) => {
         if (err) throw err;
@@ -89,7 +89,7 @@ const login = async (req, res) => {
 
     jwt.sign(
       payload,
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES },
       (err, token) => {
         if (err) throw err;
@@ -157,7 +157,7 @@ const socialLogin = async (req, res) => {
 
     jwt.sign(
       payload,
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES },
       (err, token) => {
         if (err) throw err;

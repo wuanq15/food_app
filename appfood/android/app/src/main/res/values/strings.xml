@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Đăng nhập Facebook: vào https://developers.facebook.com/apps
+      > Ứng dụng > Cài đặt > Cơ bản — copy App ID và Client Token vào đây (cùng giá trị với iOS Info.plist).
+    -->
+    <string name="facebook_app_id">1648019809727962</string>
+    <string name="facebook_client_token">0c76dc83be2a1b5c1796885a820cb765</string>
+</resources>

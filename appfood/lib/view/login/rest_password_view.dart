@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/common/globs.dart';
+import 'package:http/http.dart' as http;
 import 'package:appfood/common_widget/round_button.dart';
 import 'package:appfood/common_widget/round_textfield.dart';
 import 'package:appfood/view/login/otp_view.dart';

@@ -5,7 +5,7 @@ class InboxView extends StatelessWidget {
   const InboxView({super.key});
 
   static final _messages = [
-    _Msg('MealMonkey', 'Cảm ơn bạn đã đặt hàng! Đánh giá trải nghiệm giúp chúng tôi cải thiện.', 'T2'),
+    _Msg('FastBite', 'Cảm ơn bạn đã đặt hàng! Đánh giá trải nghiệm giúp chúng tôi cải thiện.', 'T2'),
     _Msg('CSKH', 'Yêu cầu của bạn #8821 đã được tiếp nhận.', 'CN'),
     _Msg('Khuyến mãi', 'Tuần mới — bộ sưu tập món chay mới đã có mặt.', 'T6'),
   ];

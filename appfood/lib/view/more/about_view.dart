@@ -13,7 +13,7 @@ class AboutView extends StatelessWidget {
         elevation: 0,
         iconTheme: IconThemeData(color: TColor.primaryText),
         title: Text(
-          'Về MealMonkey',
+          'Về FastBite',
           style: TextStyle(
             color: TColor.primaryText,
             fontWeight: FontWeight.w700,
@@ -28,7 +28,7 @@ class AboutView extends StatelessWidget {
             Image.asset('assets/img/logo.png', width: 120),
             const SizedBox(height: 20),
             Text(
-              'MealMonkey',
+              'FastBite',
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,

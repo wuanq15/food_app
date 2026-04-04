@@ -35,7 +35,7 @@ class _SignUpViewState extends State<SignUpView> {
     showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
     
     final url = Uri.parse(Globs.registerUrl);
-    
+
     try {
       final response = await http.post(
         url,

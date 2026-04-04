@@ -83,7 +83,7 @@ class _MapPickerViewState extends State<MapPickerView> {
         "&format=json&accept-language=vi",
       );
       final response = await http.get(url, headers: {
-        "User-Agent": "MealMonkeyApp/1.0",
+        "User-Agent": "FastBiteApp/1.0",
       });
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -119,7 +119,7 @@ class _MapPickerViewState extends State<MapPickerView> {
       );
       try {
         final response = await http.get(url, headers: {
-          "User-Agent": "MealMonkeyApp/1.0",
+          "User-Agent": "FastBiteApp/1.0",
         });
         if (response.statusCode == 200) {
           if (mounted) {

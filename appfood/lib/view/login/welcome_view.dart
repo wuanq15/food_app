@@ -51,7 +51,7 @@ class WelcomeView extends StatelessWidget {
                       Image.asset("assets/img/logo.png", width: 160),
 
                       Text(
-                        "Welcome to MealMonkey",
+                        "Welcome to FastBite",
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,

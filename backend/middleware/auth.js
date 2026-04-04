@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../config/jwtSecret');
 
 module.exports = function (req, res, next) {
   // Get token from header
@@ -13,7 +14,7 @@ module.exports = function (req, res, next) {
 
   // Verify token
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_for_appfood_2024');
+    const decoded = jwt.verify(token, getJwtSecret());
     req.user = decoded.user;
     next();
   } catch (err) {

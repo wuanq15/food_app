@@ -2,13 +2,32 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const { assertJwtConfigured } = require('./config/jwtSecret');
+assertJwtConfigured();
+
 const authRoutes = require('./routes/authRoutes');
 const foodRoutes = require('./routes/foodRoutes');
 
 const app = express();
 
-// Init Middleware
-app.use(cors());
+const corsOriginsEnv = process.env.CORS_ORIGINS;
+const corsOptions =
+  corsOriginsEnv && corsOriginsEnv.trim() !== '' && corsOriginsEnv.trim() !== '*'
+    ? {
+        origin(origin, callback) {
+          if (!origin) return callback(null, true);
+          const list = corsOriginsEnv
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (list.includes(origin)) return callback(null, true);
+          return callback(null, false);
+        },
+      }
+    : {};
+
+// Init Middleware (dev: mở CORS; production: đặt CORS_ORIGINS=url1,url2)
+app.use(cors(corsOptions));
 app.use(express.json({ extended: false }));
 
 app.get('/api/health', (req, res) => {
