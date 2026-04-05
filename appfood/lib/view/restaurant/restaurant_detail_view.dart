@@ -4,6 +4,7 @@ import 'package:appfood/model/restaurant_model.dart';
 import 'package:appfood/model/menu_item_model.dart';
 import 'package:appfood/model/cart_item_model.dart';
 import 'package:appfood/common/cart_nav.dart';
+import 'package:appfood/common/smart_image.dart';
 
 class RestaurantDetailView extends StatefulWidget {
   final RestaurantModel restaurant;
@@ -144,15 +145,47 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          color: TColor.textfield,
-          child: Center(
-            child: Text(
-              _categoryEmoji(
-                  r.category.isNotEmpty ? r.category : r.type1),
-              style: const TextStyle(fontSize: 80),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: SmartImage(
+                r.imageUrl.trim().isNotEmpty
+                    ? r.imageUrl.trim()
+                    : 'https://picsum.photos/seed/${r.id}/800/450',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => ColoredBox(
+                  color: TColor.textfield,
+                  child: Center(
+                    child: Text(
+                      _categoryEmoji(
+                        r.category.isNotEmpty ? r.category : r.type1,
+                      ),
+                      style: const TextStyle(fontSize: 80),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 80,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.45),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -247,16 +280,29 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
       ),
       child: Row(
         children: [
-          // Emoji ảnh món
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: TColor.textfield,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(item.emoji, style: const TextStyle(fontSize: 36)),
+          // Ảnh món: URL từ API hoặc ảnh cố định theo id (mỗi món một seed)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 72,
+              height: 72,
+              child: SmartImage(
+                item.imageUrl.trim().isNotEmpty
+                    ? item.imageUrl.trim()
+                    : 'https://picsum.photos/seed/${item.id}/200/200',
+                width: 72,
+                height: 72,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => ColoredBox(
+                  color: TColor.textfield,
+                  child: Center(
+                    child: Text(
+                      item.emoji,
+                      style: const TextStyle(fontSize: 36),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 14),

@@ -177,7 +177,7 @@ class _SearchViewState extends State<SearchView> {
                                         "price": item.price.toStringAsFixed(0),
                                         "image": item.imageUrl.isNotEmpty
                                             ? item.imageUrl
-                                            : "https://loremflickr.com/400/400/food?random=${item.id}",
+                                            : 'https://picsum.photos/seed/${item.id}/400/400',
                                         "category": item.category,
                                         "emoji": item.emoji,
                                         "description": item.description,

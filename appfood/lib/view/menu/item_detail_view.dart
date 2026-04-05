@@ -83,8 +83,11 @@ class _ItemDetailViewState extends State<ItemDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final img = widget.itemObj['image'] ??
-        'https://loremflickr.com/500/500/food';
+    final id = widget.itemObj['id']?.toString() ?? 'item';
+    final rawImg = widget.itemObj['image'];
+    final img = (rawImg is String && rawImg.trim().isNotEmpty)
+        ? rawImg.trim()
+        : 'https://picsum.photos/seed/$id/500/500';
     final lineTotal = CartManager.formatPrice(_unitPrice * _quantity);
 
     return Scaffold(

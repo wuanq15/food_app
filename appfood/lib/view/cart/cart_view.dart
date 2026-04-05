@@ -277,22 +277,92 @@ class _CartViewState extends State<CartView> {
         });
         await showDialog<void>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
-            title: const Text('Đặt hàng thành công'),
-            content: Text(
-              orderId != null
-                  ? 'Mã đơn: #$orderId\n\n$paidLabel\n\nCảm ơn bạn! Đơn đang được xử lý.\nDự kiến giao: 20–30 phút.'
-                  : 'Cảm ơn bạn! Đơn hàng đang được xử lý.\nThời gian giao dự kiến: 20–30 phút.',
-              style: TextStyle(color: TColor.secondaryText, height: 1.4),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text('Đóng', style: TextStyle(color: TColor.primaryDark)),
+          builder: (ctx) => Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor: TColor.background,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 32, bottom: 24, left: 24, right: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: 80,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Đặt hàng thành công!',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: TColor.primaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (orderId != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: TColor.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Mã đơn: #$orderId',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: TColor.primaryDark,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Text(
+                    orderId != null
+                        ? '$paidLabel\n\nCảm ơn bạn! Đơn đang được xử lý.\nDự kiến giao: 20–30 phút.'
+                        : 'Cảm ơn bạn! Đơn hàng đang được xử lý.\nThời gian giao dự kiến: 20–30 phút.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: TColor.secondaryText,
+                      fontSize: 15,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: TColor.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text(
+                        'Đóng',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
         if (mounted) Navigator.of(context).maybePop();
@@ -442,10 +512,18 @@ class _CartViewState extends State<CartView> {
               _checkoutSectionTitle('Phương thức thanh toán'),
               const SizedBox(height: 10),
               _buildPaymentMethodSection(),
+              const SizedBox(height: 20),
+              _checkoutSectionTitle('Ưu đãi & Khuyến mãi'),
+              const SizedBox(height: 10),
+              _buildVoucherSection(),
+              const SizedBox(height: 20),
+              _checkoutSectionTitle('Chi tiết thanh toán'),
+              const SizedBox(height: 10),
+              _buildPaymentDetails(),
             ],
           ),
         ),
-        _buildOrderSummary(context),
+        _buildBottomSticky(),
       ],
     );
   }
@@ -759,11 +837,107 @@ class _CartViewState extends State<CartView> {
     );
   }
 
-  // ── ORDER SUMMARY ──
-  Widget _buildOrderSummary(BuildContext context) {
-    final blockedMulti = _cart.hasMultipleRestaurants;
+  Widget _buildVoucherSection() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: TColor.textfield,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: TColor.textfield, width: 1.5),
+            ),
+            child: TextField(
+              controller: _voucherCodeController,
+              textCapitalization: TextCapitalization.characters,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: TColor.primaryText,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Nhập mã giảm giá...',
+                hintStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: TColor.placeholder,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        SizedBox(
+          height: 48,
+          child: FilledButton(
+            onPressed: () {
+              final code = _normalizeVoucher(_voucherCodeController.text);
+              if (code.isEmpty) {
+                setState(() => _appliedVoucherCode = '');
+                return;
+              }
+              if (!_isVoucherAllowed(code)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Mã ưu đãi không hợp lệ')),
+                );
+                return;
+              }
+              setState(() => _appliedVoucherCode = code);
+              FocusScope.of(context).unfocus();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã áp mã ưu đãi thành công 🎉')),
+              );
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: TColor.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Áp dụng',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentDetails() {
     final deliveryFee = _voucherDeliveryFee();
     final discount = _voucherDiscountAmount();
+    return Column(
+      children: [
+        _summaryRow("Tạm tính", CartManager.formatPrice(_cart.subtotal)),
+        const SizedBox(height: 8),
+        _summaryRow(
+          "Phí giao hàng",
+          CartManager.formatPrice(deliveryFee),
+          hint: _appliedVoucherCode == 'FREESHIP'
+              ? "Miễn phí theo voucher"
+              : (_cart.subtotal >= 150000 ? "Miễn phí từ 150k" : null),
+        ),
+        if (_appliedVoucherCode.isNotEmpty && discount > 0) ...[
+          const SizedBox(height: 8),
+          _summaryRow(
+            "Giảm giá",
+            '-${CartManager.formatPrice(discount)}',
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ── BOTTOM STICKY AREA ──
+  Widget _buildBottomSticky() {
+    final blockedMulti = _cart.hasMultipleRestaurants;
     final total = _voucherTotalPrice();
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -799,131 +973,17 @@ class _CartViewState extends State<CartView> {
               ),
             ),
           ],
-          _summaryRow("Tạm tính", CartManager.formatPrice(_cart.subtotal)),
-          const SizedBox(height: 8),
-          _summaryRow(
-            "Phí giao hàng",
-            CartManager.formatPrice(deliveryFee),
-            hint: _appliedVoucherCode == 'FREESHIP'
-                ? "Miễn phí theo voucher"
-                : (_cart.subtotal >= 150000 ? "Miễn phí từ 150k" : null),
-          ),
-          const SizedBox(height: 8),
-          if (_appliedVoucherCode.isNotEmpty && discount > 0) ...[
-            _summaryRow(
-              "Giảm giá",
-              '-${CartManager.formatPrice(discount)}',
-            ),
-            const SizedBox(height: 8),
-          ],
-          // Mã ưu đãi (demo hardcode 3 voucher).
-          Text(
-            'Mã ưu đãi',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: TColor.secondaryText,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _voucherCodeController,
-                  decoration: InputDecoration(
-                    hintText: 'Nhập mã: FREESHIP / GIAM20K / MONKEY10',
-                    filled: true,
-                    fillColor: TColor.textfield,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              SizedBox(
-                height: 44,
-                child: FilledButton(
-                  onPressed: () {
-                    final code = _normalizeVoucher(_voucherCodeController.text);
-                    if (code.isEmpty) {
-                      setState(() => _appliedVoucherCode = '');
-                      return;
-                    }
-                    if (!_isVoucherAllowed(code)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Mã ưu đãi không hợp lệ')),
-                      );
-                      return;
-                    }
-                    setState(() => _appliedVoucherCode = code);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã áp mã ưu đãi')),
-                    );
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: TColor.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Áp dụng',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Phương thức',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: TColor.secondaryText,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  _paymentMethodLabel(_paymentMethod),
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: TColor.primaryText,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 20),
           _summaryRow(
             "Tổng cộng",
             CartManager.formatPrice(total),
             isBold: true,
           ),
           const SizedBox(height: 16),
-
           SizedBox(
             width: double.infinity,
             height: 52,
             child: FilledButton(
-              onPressed: (_isCheckingOut || blockedMulti)
-                  ? null
-                  : _handleCheckout,
+              onPressed: (_isCheckingOut || blockedMulti) ? null : _handleCheckout,
               style: FilledButton.styleFrom(
                 backgroundColor: TColor.primary,
                 foregroundColor: Colors.white,

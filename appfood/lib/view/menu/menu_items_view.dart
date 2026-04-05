@@ -112,7 +112,7 @@ class _MenuItemsViewState extends State<MenuItemsView> {
                         var iter = _items[index];
                         String imgUrl = iter.imageUrl.isNotEmpty
                             ? iter.imageUrl
-                            : "https://loremflickr.com/400/400/food?random=${iter.id}";
+                            : 'https://picsum.photos/seed/${iter.id}/400/400';
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
