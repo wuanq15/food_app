@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:appfood/common/auth_store.dart';
 import 'package:appfood/common/cart_nav.dart';
 import 'package:appfood/common/color_extension.dart';
+import 'package:appfood/view/admin/admin_home_view.dart';
 import 'package:appfood/view/more/about_view.dart';
 import 'package:appfood/view/more/inbox_view.dart';
 import 'package:appfood/view/more/notifications_view.dart';
@@ -8,8 +10,26 @@ import 'package:appfood/view/profile/order_history_view.dart';
 import 'package:appfood/view/profile/payment_methods_view.dart';
 
 /// Tab "Khác" — menu phụ.
-class MoreView extends StatelessWidget {
+class MoreView extends StatefulWidget {
   const MoreView({super.key});
+
+  @override
+  State<MoreView> createState() => _MoreViewState();
+}
+
+class _MoreViewState extends State<MoreView> {
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final a = await AuthStore.isAdmin();
+    if (mounted) setState(() => _isAdmin = a);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +64,26 @@ class MoreView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
+              child: RefreshIndicator(
+                onRefresh: _loadRole,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                  if (_isAdmin) ...[
+                    _MoreTile(
+                      icon: Icons.admin_panel_settings_outlined,
+                      title: 'Quản trị',
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const AdminHomeView(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   _MoreTile(
                     icon: Icons.payments_outlined,
                     title: 'Chi tiết thanh toán',
@@ -113,6 +150,7 @@ class MoreView extends StatelessWidget {
                     },
                   ),
                 ],
+                ),
               ),
             ),
           ],

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Lưu JWT sau đăng nhập; gửi kèm API (profile, đặt hàng, lịch sử đơn).
 class AuthStore {
   static const _kToken = 'auth_jwt';
+  static const _kRole = 'auth_role';
 
   static Future<void> setToken(String? token) async {
     final p = await SharedPreferences.getInstance();
@@ -20,16 +21,40 @@ class AuthStore {
     return p.getString(_kToken);
   }
 
+  static Future<void> setRole(String? role) async {
+    final p = await SharedPreferences.getInstance();
+    if (role == null || role.isEmpty) {
+      await p.remove(_kRole);
+    } else {
+      await p.setString(_kRole, role);
+    }
+  }
+
+  static Future<String?> getRole() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getString(_kRole);
+  }
+
+  static Future<bool> isAdmin() async => (await getRole()) == 'admin';
+
   static Future<void> clear() async {
     final p = await SharedPreferences.getInstance();
     await p.remove(_kToken);
+    await p.remove(_kRole);
   }
 
   static Future<void> saveTokenFromResponseBody(String body) async {
     try {
       final m = jsonDecode(body);
-      if (m is Map<String, dynamic> && m['token'] is String) {
+      if (m is! Map<String, dynamic>) return;
+      if (m['token'] is String) {
         await setToken(m['token'] as String);
+      }
+      final u = m['user'];
+      if (u is Map && u['role'] != null) {
+        await setRole(u['role'].toString());
+      } else {
+        await setRole(null);
       }
     } catch (_) {}
   }

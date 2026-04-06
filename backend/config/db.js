@@ -29,6 +29,10 @@ const createTables = async () => {
   try {
     await pool.query(queryText);
     await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS address VARCHAR(255);');
+    await pool.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user';`,
+    );
+    await pool.query(`UPDATE users SET role = 'user' WHERE role IS NULL OR role = '';`);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS password_resets (
@@ -179,7 +183,30 @@ const createTables = async () => {
       `ALTER TABLE order_items
         ADD COLUMN IF NOT EXISTS line_total DOUBLE PRECISION NOT NULL DEFAULT 0;`,
     );
-    
+    await pool.query(`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image TEXT;`);
+    await pool.query(
+      `ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS lat DOUBLE PRECISION;`,
+    );
+    await pool.query(
+      `ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS lng DOUBLE PRECISION;`,
+    );
+    await pool.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`,
+    );
+    await pool.query(`UPDATE users SET is_active = TRUE WHERE is_active IS NULL;`);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS vouchers (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(40) UNIQUE NOT NULL,
+        rule VARCHAR(32) NOT NULL,
+        title VARCHAR(255),
+        description TEXT,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log('All Database tables initialized successfully');
 
     // Run seed data
@@ -193,6 +220,21 @@ const createTables = async () => {
       await seed.seedDemoUser(pool);
     } catch (err) {
       console.log('seedDemoUser error:', err.message);
+    }
+    try {
+      await seed.seedAdminUser(pool);
+    } catch (err) {
+      console.log('seedAdminUser error:', err.message);
+    }
+    try {
+      await seed.seedVouchers(pool);
+    } catch (err) {
+      console.log('seedVouchers error:', err.message);
+    }
+    try {
+      await seed.seedRestaurantCoords(pool);
+    } catch (err) {
+      console.log('seedRestaurantCoords error:', err.message);
     }
   } catch (error) {
     console.error('Error creating users table:', error);

@@ -30,11 +30,28 @@ class Globs {
   static String get profileUrl => '$baseUrl/api/auth/profile';
   static String get forgotPasswordUrl => '$baseUrl/api/auth/forgot-password';
   static String get resetPasswordUrl => '$baseUrl/api/auth/reset-password';
+  static String get restaurantsUrl => '$baseUrl/api/food/restaurants';
   static String get itemsUrl => '$baseUrl/api/food/items';
   static String get searchUrl => '$baseUrl/api/food/search';
   static String get categoriesUrl => '$baseUrl/api/food/categories';
+  /// Mã ưu đãi đang bật (public, không cần JWT).
+  static String get publicVouchersUrl => '$baseUrl/api/food/vouchers';
   static String get checkoutUrl => '$baseUrl/api/food/checkout';
   static String get myOrdersUrl => '$baseUrl/api/food/my-orders';
+
+  static String get adminOrdersUrl => '$baseUrl/api/admin/orders';
+  static String adminOrderPatchUrl(int id) => '$baseUrl/api/admin/orders/$id';
+  static String get adminRestaurantsUrl => '$baseUrl/api/admin/restaurants';
+  static String adminRestaurantUrl(String id) => '$baseUrl/api/admin/restaurants/$id';
+  static String get adminCategoriesUrl => '$baseUrl/api/admin/categories';
+  static String adminCategoryUrl(String id) => '$baseUrl/api/admin/categories/$id';
+  static String get adminItemsUrl => '$baseUrl/api/admin/items';
+  static String adminItemUrl(String id) => '$baseUrl/api/admin/items/$id';
+  static String get adminVouchersUrl => '$baseUrl/api/admin/vouchers';
+  static String adminVoucherDetailUrl(String code) =>
+      '$baseUrl/api/admin/vouchers/${Uri.encodeComponent(code)}';
+  static String get adminUsersUrl => '$baseUrl/api/admin/users';
+  static String adminUserPatchUrl(int id) => '$baseUrl/api/admin/users/$id';
 
   /// JSON `{ "message": "..." }` hoặc chuỗi thường từ server (vd. 500).
   static String apiErrorMessage(String body, {String fallback = 'Lỗi'}) {

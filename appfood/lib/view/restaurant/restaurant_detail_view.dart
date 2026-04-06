@@ -232,6 +232,18 @@ class _RestaurantDetailViewState extends State<RestaurantDetailView> {
           ),
           const SizedBox(height: 12),
 
+          if (r.typeTagsDisplayLine.isNotEmpty) ...[
+            Text(
+              r.typeTagsDisplayLine,
+              style: TextStyle(
+                fontSize: 14,
+                color: TColor.secondaryText,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           // Stats row
           Row(
             children: [

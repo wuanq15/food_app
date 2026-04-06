@@ -27,7 +27,7 @@ const register = async (req, res) => {
 
     // 3. Insert user into db
     const newUser = await db.query(
-      'INSERT INTO users (fullname, email, password, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING id, fullname, email, phone, address',
+      'INSERT INTO users (fullname, email, password, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING id, fullname, email, phone, address, role, is_active',
       [fullname, email, hashedPassword, phone, address]
     );
 
@@ -65,7 +65,7 @@ const login = async (req, res) => {
     }
     // 1. Check if user exists (không phân biệt hoa thường)
     const userResult = await db.query(
-      'SELECT * FROM users WHERE LOWER(TRIM(email)) = $1',
+      'SELECT id, fullname, email, password, phone, address, role, is_active, created_at FROM users WHERE LOWER(TRIM(email)) = $1',
       [email],
     );
     if (userResult.rows.length === 0) {
@@ -73,6 +73,10 @@ const login = async (req, res) => {
     }
 
     const user = userResult.rows[0];
+
+    if (user.is_active === false) {
+      return res.status(403).json({ message: 'Tài khoản đã bị khóa' });
+    }
 
     // 2. Check password
     const isMatch = await bcrypt.compare(password, user.password);
@@ -109,7 +113,7 @@ const login = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     const userResult = await db.query(
-      'SELECT id, fullname, email, phone, address, created_at FROM users WHERE id = $1',
+      'SELECT id, fullname, email, phone, address, role, is_active, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
     
@@ -140,11 +144,14 @@ const socialLogin = async (req, res) => {
 
     if (userResult.rows.length > 0) {
       user = userResult.rows[0];
+      if (user.is_active === false) {
+        return res.status(403).json({ message: 'Tài khoản đã bị khóa' });
+      }
     } else {
       // 2. If not exists, register a new user automatically
       const generatedPassword = await bcrypt.hash(provider_id || Math.random().toString(36), 10);
       const newUser = await db.query(
-        'INSERT INTO users (fullname, email, password) VALUES ($1, $2, $3) RETURNING id, fullname, email',
+        'INSERT INTO users (fullname, email, password) VALUES ($1, $2, $3) RETURNING id, fullname, email, role, is_active',
         [fullname || 'Social User', email, generatedPassword]
       );
       user = newUser.rows[0];

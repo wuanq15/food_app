@@ -8,7 +8,7 @@ import 'package:appfood/common_widget/round_button.dart';
 
 import 'package:appfood/common_widget/round_textfield.dart';
 import 'package:appfood/view/login/login_view.dart';
-import 'package:appfood/view/main_tabview/main_tabview.dart';
+import 'package:appfood/common/auth_navigation.dart';
 import 'package:flutter/material.dart';
 
 class SignUpView extends StatefulWidget {
@@ -50,7 +50,7 @@ class _SignUpViewState extends State<SignUpView> {
       );
       
       if (!mounted) return;
-      Navigator.pop(context); // close dialog
+      Navigator.of(context, rootNavigator: true).pop();
       
       if (response.statusCode == 201) {
         await AuthStore.saveTokenFromResponseBody(response.body);
@@ -59,11 +59,7 @@ class _SignUpViewState extends State<SignUpView> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Đăng ký thành công!")),
         );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainTabView()),
-          (route) => false,
-        );
+        await replaceWithPostAuthHome(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -74,8 +70,10 @@ class _SignUpViewState extends State<SignUpView> {
         );
       }
     } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       if (!mounted) return;
-      Navigator.pop(context); // close dialog
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi kết nối server: $e")));
     }
   }

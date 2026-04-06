@@ -57,8 +57,7 @@ class _NewPasswordViewState extends State<NewPasswordView> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đổi mật khẩu thành công. Vui lòng đăng nhập.')),
         );
-        Navigator.pushAndRemoveUntil(
-          context,
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginView()),
           (route) => false,
         );

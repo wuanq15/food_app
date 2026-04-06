@@ -5,6 +5,7 @@ const optionalAuth = require('../middleware/optionalAuth');
 const auth = require('../middleware/auth');
 
 router.get('/restaurants', foodController.getRestaurants);
+router.get('/vouchers', foodController.listVouchers);
 router.get('/categories', foodController.getCategories);
 router.get('/items', foodController.getMenuItems);
 router.get('/search', foodController.searchFood);

@@ -29,7 +29,7 @@ class _OrderViewState extends State<OrderView> {
   }
 
   void _fetchData() async {
-    final resData = await RestaurantModel.fetchAll();
+    final resData = await RestaurantModel.fetchAllWithBestEffortLocation();
     if (mounted) {
       setState(() {
         _offerItems = resData;
@@ -226,16 +226,18 @@ class _OrderViewState extends State<OrderView> {
                                               ),
                                             ],
                                           ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            "${restaurant.type1} • ${restaurant.type2}",
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              color: TColor.secondaryText,
-                                              fontSize: 13,
+                                          if (restaurant.typeTagsDisplayLine.isNotEmpty) ...[
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              restaurant.typeTagsDisplayLine,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: TColor.secondaryText,
+                                                fontSize: 13,
+                                              ),
                                             ),
-                                          ),
+                                          ],
                                         ],
                                       ),
                                     ),

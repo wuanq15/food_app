@@ -49,19 +49,41 @@ class RestaurantCell extends StatelessWidget {
             const SizedBox(height: 4),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.star, color: TColor.primary, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    "${restaurant.rating} (${restaurant.reviewCount} đánh giá)",
-                    style: TextStyle(color: TColor.primary, fontSize: 12, fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      Icon(Icons.star, color: TColor.primary, size: 16),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          "${restaurant.rating} (${restaurant.reviewCount} đánh giá)",
+                          style: TextStyle(
+                            color: TColor.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      if (restaurant.distanceKm != null)
+                        Text(
+                          "${restaurant.distanceKm!.toStringAsFixed(1)} km",
+                          style: TextStyle(
+                            color: TColor.secondaryText,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    "${restaurant.type1}   ·   ${restaurant.type2}",
-                    style: TextStyle(color: TColor.secondaryText, fontSize: 12),
-                  ),
+                  if (restaurant.typeTagsDisplayLine.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      restaurant.typeTagsDisplayLine,
+                      style: TextStyle(color: TColor.secondaryText, fontSize: 12),
+                    ),
+                  ],
                 ],
               ),
             )

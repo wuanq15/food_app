@@ -8,7 +8,7 @@ import 'package:appfood/common_widget/round_button.dart';
 import 'package:appfood/common_widget/round_textfield.dart';
 import 'package:appfood/view/login/rest_password_view.dart';
 import 'package:appfood/view/login/sing_up_view.dart';
-import 'package:appfood/view/main_tabview/main_tabview.dart';
+import 'package:appfood/common/auth_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -51,7 +51,7 @@ class _LoginViewState extends State<LoginView> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context); // close dialog
+      Navigator.of(context, rootNavigator: true).pop();
 
       if (response.statusCode == 200) {
         await AuthStore.saveTokenFromResponseBody(response.body);
@@ -62,11 +62,7 @@ class _LoginViewState extends State<LoginView> {
         ).showSnackBar(
           const SnackBar(content: Text("Đăng nhập thành công!")),
         );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainTabView()),
-          (route) => false,
-        );
+        await replaceWithPostAuthHome(context);
       } else {
         final msg = Globs.apiErrorMessage(
           response.body,
@@ -79,8 +75,10 @@ class _LoginViewState extends State<LoginView> {
         );
       }
     } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       if (!mounted) return;
-      Navigator.pop(context); // close dialog
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Lỗi kết nối server: $e")));
@@ -113,7 +111,7 @@ class _LoginViewState extends State<LoginView> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context); // close dialog
+      Navigator.of(context, rootNavigator: true).pop();
 
       if (response.statusCode == 200) {
         await AuthStore.saveTokenFromResponseBody(response.body);
@@ -122,19 +120,17 @@ class _LoginViewState extends State<LoginView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Đăng nhập $provider thành công!")),
         );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainTabView()),
-          (route) => false,
-        );
+        await replaceWithPostAuthHome(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Lỗi chứng thực từ server")),
         );
       }
     } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       if (!mounted) return;
-      Navigator.pop(context);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Lỗi kết nối: $e")));

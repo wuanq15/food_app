@@ -1,10 +1,98 @@
 const db = require('../config/db');
 const { pool } = db;
 
+/** Khoảng cách đường chim (km) giữa hai điểm WGS84. */
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/** rule: FREESHIP | GIAM20K | MONKEY10 — khớp logic giỏ hàng app */
+function applyVoucherRule(rule, subtotal, deliveryFee) {
+  let df = deliveryFee;
+  let discount = 0;
+  switch (rule) {
+    case 'FREESHIP':
+      df = 0;
+      break;
+    case 'GIAM20K': {
+      const totalBeforeDiscount = subtotal + df;
+      discount = Math.min(20000, totalBeforeDiscount);
+      break;
+    }
+    case 'MONKEY10': {
+      const totalBeforeDiscount = subtotal + df;
+      const d = subtotal * 0.1;
+      discount = Math.min(30000, d, totalBeforeDiscount);
+      break;
+    }
+    default:
+      return null;
+  }
+  return { deliveryFee: df, discount };
+}
+
+exports.listVouchers = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT code, rule, title, description
+       FROM vouchers WHERE is_active = true ORDER BY code`,
+    );
+    res.json(result.rows);
+  } catch (e) {
+    console.error('listVouchers', e);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
 exports.getRestaurants = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM restaurants');
-    res.json(result.rows);
+    const ulat = parseFloat(req.query.lat);
+    const ulng = parseFloat(req.query.lng);
+    const hasUser = Number.isFinite(ulat) && Number.isFinite(ulng);
+
+    const rows = result.rows.map((r) => {
+      const row = { ...r };
+      let dkm = null;
+      if (hasUser && r.lat != null && r.lng != null) {
+        const rlat = parseFloat(r.lat);
+        const rlng = parseFloat(r.lng);
+        if (Number.isFinite(rlat) && Number.isFinite(rlng)) {
+          dkm = haversineKm(ulat, ulng, rlat, rlng);
+        }
+      }
+      if (dkm != null) {
+        row.distance_km = Math.round(dkm * 100) / 100;
+      }
+      return row;
+    });
+
+    if (hasUser) {
+      rows.sort((a, b) => {
+        const da =
+          a.distance_km != null && Number.isFinite(parseFloat(a.distance_km))
+            ? parseFloat(a.distance_km)
+            : Number.POSITIVE_INFINITY;
+        const db =
+          b.distance_km != null && Number.isFinite(parseFloat(b.distance_km))
+            ? parseFloat(b.distance_km)
+            : Number.POSITIVE_INFINITY;
+        return da - db;
+      });
+    }
+
+    res.json(rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -175,29 +263,19 @@ exports.checkout = async (req, res) => {
     let discount = 0;
 
     if (voucherCode) {
-      switch (voucherCode) {
-        case 'FREESHIP':
-          deliveryFee = 0;
-          discount = 0;
-          break;
-        case 'GIAM20K': {
-          // Giảm tối đa đến 20.000đ (capped theo tổng trước giảm để tránh âm)
-          const totalBeforeDiscount = subtotal + deliveryFee;
-          discount = Math.min(20000, totalBeforeDiscount);
-          break;
-        }
-        case 'MONKEY10': {
-          // Giảm 10% nhưng tối đa 30.000đ
-          const totalBeforeDiscount = subtotal + deliveryFee;
-          const d = subtotal * 0.1;
-          discount = Math.min(30000, d, totalBeforeDiscount);
-          break;
-        }
-        default:
-          return res
-            .status(400)
-            .json({ message: 'Mã ưu đãi không hợp lệ' });
+      const vr = await pool.query(
+        `SELECT rule FROM vouchers WHERE UPPER(TRIM(code)) = $1 AND is_active = true`,
+        [voucherCode],
+      );
+      if (vr.rows.length === 0) {
+        return res.status(400).json({ message: 'Mã ưu đãi không hợp lệ' });
       }
+      const applied = applyVoucherRule(vr.rows[0].rule, subtotal, deliveryFee);
+      if (!applied) {
+        return res.status(400).json({ message: 'Mã ưu đãi không hợp lệ' });
+      }
+      deliveryFee = applied.deliveryFee;
+      discount = applied.discount;
     }
 
     const expectedTotal = Math.max(0, subtotal + deliveryFee - discount);

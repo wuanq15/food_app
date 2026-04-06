@@ -78,7 +78,9 @@ class MenuItemModel {
 
   static Future<List<MenuItemModel>> search(String q) async {
     try {
-      final url = Uri.parse('${Globs.searchUrl}?q=$q');
+      final url = Uri.parse(Globs.searchUrl).replace(
+        queryParameters: {'q': q},
+      );
       final res = await http.get(url);
       if (res.statusCode == 200) {
         final List data = jsonDecode(res.body);

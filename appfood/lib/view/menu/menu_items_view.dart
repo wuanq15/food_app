@@ -176,7 +176,7 @@ class _MenuItemsViewState extends State<MenuItemsView> {
                                       Icon(Icons.star, color: TColor.primary, size: 14),
                                       const SizedBox(width: 5),
                                       Text(
-                                        "4.9 Đánh giá · \${iter.category}",
+                                        "4.9 Đánh giá · ${iter.category}",
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,

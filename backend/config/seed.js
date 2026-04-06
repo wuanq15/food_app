@@ -30,16 +30,17 @@ const seedData = async (pool) => {
     console.log('No food data found. Seeding database with mock data...');
 
     // 1. Seed Restaurants
+    // distance_km cột legacy; khoảng cách hiển thị tính từ lat/lng nhà hàng + vị trí khách (API).
     const restaurants = [
-      ["r1", "Cơm tấm ngon", "4.8", "305", "Cơm tấm", "Vietnamese", "https://loremflickr.com/400/400/restaurant?random=1", 1.2],
-      ["r2", "Phở bò Hà Nội", "4.9", "124", "Phở", "Traditional", "https://loremflickr.com/400/400/restaurant?random=2", 0.8],
-      ["r3", "Burger King", "4.5", "500", "Burger", "Fast Food", "https://loremflickr.com/400/400/restaurant?random=3", 2.5],
-      ["r4", "Pizza Hut", "4.7", "410", "Pizza", "Italian", "https://loremflickr.com/400/400/restaurant?random=4", 3.0],
-      ["r5", "Bánh mì Hội An", "4.9", "890", "Bánh mì", "Street Food", "https://loremflickr.com/400/400/restaurant?random=5", 0.5]
+      ["r1", "Cơm tấm ngon", "4.8", "305", "Cơm tấm", "Vietnamese", "https://loremflickr.com/400/400/restaurant?random=1", 0, 10.7819, 106.6974],
+      ["r2", "Phở bò Hà Nội", "4.9", "124", "Phở", "Traditional", "https://loremflickr.com/400/400/restaurant?random=2", 0, 10.7736, 106.7042],
+      ["r3", "Burger King", "4.5", "500", "Burger", "Fast Food", "https://loremflickr.com/400/400/restaurant?random=3", 0, 10.7865, 106.712],
+      ["r4", "Pizza Hut", "4.7", "410", "Pizza", "Italian", "https://loremflickr.com/400/400/restaurant?random=4", 0, 10.7688, 106.6895],
+      ["r5", "Bánh mì Hội An", "4.9", "890", "Bánh mì", "Street Food", "https://loremflickr.com/400/400/restaurant?random=5", 0, 10.7752, 106.7018],
     ];
     for (let r of restaurants) {
       await pool.query(
-        "INSERT INTO restaurants (id, name, rating, review_count, type1, type2, image, distance_km) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+        "INSERT INTO restaurants (id, name, rating, review_count, type1, type2, image, distance_km, lat, lng) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
         r
       );
     }
@@ -107,4 +108,69 @@ const seedData = async (pool) => {
   }
 };
 
-module.exports = { seedData, seedDemoUser };
+/** Tài khoản quản trị (đăng nhập app → tab Khác → Quản trị). */
+const seedAdminUser = async (pool) => {
+  try {
+    const email = 'admin@appfood.com';
+    const hash = await bcrypt.hash('admin123456', 10);
+    const u = await pool.query('SELECT id FROM users WHERE LOWER(TRIM(email)) = $1', [
+      email,
+    ]);
+    if (u.rows.length > 0) {
+      await pool.query('UPDATE users SET role = $1 WHERE id = $2', ['admin', u.rows[0].id]);
+      return;
+    }
+    await pool.query(
+      'INSERT INTO users (fullname, email, password, role) VALUES ($1, $2, $3, $4)',
+      ['Quản trị viên', email, hash, 'admin'],
+    );
+    console.log('Admin login: admin@appfood.com / admin123456');
+  } catch (e) {
+    console.error('seedAdminUser:', e.message);
+  }
+};
+
+/** Voucher mặc định (checkout đọc từ bảng vouchers). */
+const seedVouchers = async (pool) => {
+  try {
+    const n = await pool.query('SELECT COUNT(*)::int AS c FROM vouchers');
+    if (n.rows[0].c > 0) return;
+    const rows = [
+      ['FREESHIP', 'FREESHIP', 'Miễn phí ship', 'Miễn phí giao hàng', true],
+      ['GIAM20K', 'GIAM20K', 'Giảm 20.000đ', 'Giảm tối đa 20.000đ', true],
+      ['MONKEY10', 'MONKEY10', 'Giảm 10%', 'Giảm 10% tối đa 30.000đ', true],
+    ];
+    for (const r of rows) {
+      await pool.query(
+        `INSERT INTO vouchers (code, rule, title, description, is_active) VALUES ($1,$2,$3,$4,$5)`,
+        r,
+      );
+    }
+    console.log('Seeded default vouchers (FREESHIP, GIAM20K, MONKEY10).');
+  } catch (e) {
+    console.error('seedVouchers:', e.message);
+  }
+};
+
+/** DB cũ đã có nhà hàng nhưng thiếu tọa độ — gán tọa độ mẫu quanh TP.HCM. */
+const seedRestaurantCoords = async (pool) => {
+  try {
+    const list = [
+      ['r1', 10.7819, 106.6974],
+      ['r2', 10.7736, 106.7042],
+      ['r3', 10.7865, 106.712],
+      ['r4', 10.7688, 106.6895],
+      ['r5', 10.7752, 106.7018],
+    ];
+    for (const [id, la, lo] of list) {
+      await pool.query(
+        `UPDATE restaurants SET lat = $1, lng = $2 WHERE id = $3 AND (lat IS NULL OR lng IS NULL)`,
+        [la, lo, id],
+      );
+    }
+  } catch (e) {
+    console.error('seedRestaurantCoords:', e.message);
+  }
+};
+
+module.exports = { seedData, seedDemoUser, seedAdminUser, seedVouchers, seedRestaurantCoords };

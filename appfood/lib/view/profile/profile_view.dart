@@ -72,8 +72,7 @@ class _ProfileViewState extends State<ProfileView> {
   Future<void> _logout() async {
     await AuthStore.clear();
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginView()),
       (route) => false,
     );

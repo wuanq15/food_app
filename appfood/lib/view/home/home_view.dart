@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:appfood/common/color_extension.dart';
 import 'package:appfood/model/restaurant_model.dart';
 import 'package:appfood/view/home/widget/restaurant_cell.dart';
@@ -17,16 +19,44 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   List<RestaurantModel> _restaurants = [];
   String _currentAddress = "Vị trí hiện tại";
+  /// Điểm giao hàng / vị trí tính khoảng cách đến nhà hàng.
+  LatLng? _userLatLng;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _load(refreshGps: true);
   }
 
-  void _fetchData() async {
-    final resData = await RestaurantModel.fetchAll();
+  Future<void> _tryGps() async {
+    try {
+      var perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.denied ||
+          perm == LocationPermission.deniedForever) {
+        return;
+      }
+      final p = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      ).timeout(const Duration(seconds: 10));
+      if (!mounted) return;
+      _userLatLng = LatLng(p.latitude, p.longitude);
+    } catch (_) {}
+  }
+
+  /// [refreshGps]: chỉ lần đầu / F5 — không ghi đè vị trí đã chọn trên bản đồ.
+  Future<void> _load({bool refreshGps = false}) async {
+    setState(() => _isLoading = true);
+    if (refreshGps) await _tryGps();
+    final resData = await RestaurantModel.fetchAll(
+      userLat: _userLatLng?.latitude,
+      userLng: _userLatLng?.longitude,
+    );
     if (mounted) {
       setState(() {
         _restaurants = resData;
@@ -35,17 +65,23 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  void _openMap() async {
-    final result = await Navigator.push(
+  Future<void> _openMap() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (context) => const MapPickerView(),
+        builder: (context) => MapPickerView(initialPosition: _userLatLng),
       ),
     );
-    if (result != null && result is Map<String, dynamic>) {
+    if (result != null) {
       setState(() {
-        _currentAddress = result["address"] as String;
+        _currentAddress = (result["address"] as String?) ?? _currentAddress;
+        final lat = result['lat'];
+        final lng = result['lng'];
+        if (lat is num && lng is num) {
+          _userLatLng = LatLng(lat.toDouble(), lng.toDouble());
+        }
       });
+      await _load(refreshGps: false);
     }
   }
 

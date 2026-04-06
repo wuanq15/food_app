@@ -36,7 +36,34 @@ class _CartViewState extends State<CartView> {
   void initState() {
     super.initState();
     _cart.addListener(_rebuild);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSavedCheckoutInfo());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSavedCheckoutInfo();
+      _loadVouchersFromApi();
+    });
+  }
+
+  Future<void> _loadVouchersFromApi() async {
+    try {
+      final res = await http.get(Uri.parse(Globs.publicVouchersUrl));
+      if (!mounted || res.statusCode != 200) return;
+      final list = jsonDecode(res.body) as List;
+      final codes = <String>{};
+      final map = <String, String>{};
+      for (final e in list) {
+        if (e is Map) {
+          final c = (e['code'] ?? '').toString().toUpperCase().trim();
+          final r = (e['rule'] ?? '').toString().toUpperCase().trim();
+          if (c.isEmpty) continue;
+          codes.add(c);
+          map[c] = r;
+        }
+      }
+      if (codes.isEmpty) return;
+      setState(() {
+        _allowedVoucherCodes = codes;
+        _codeToRule = map;
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadSavedCheckoutInfo() async {
@@ -107,32 +134,46 @@ class _CartViewState extends State<CartView> {
     }
   }
 
-  // ── VOUCHER (demo) ──
-  static const Set<String> _voucherCodes = {
+  // ── VOUCHER (danh sách từ API; fallback 3 mã cũ) ──
+  static const Set<String> _fallbackVoucherCodes = {
     'FREESHIP',
     'GIAM20K',
     'MONKEY10',
   };
+  static const Map<String, String> _fallbackCodeToRule = {
+    'FREESHIP': 'FREESHIP',
+    'GIAM20K': 'GIAM20K',
+    'MONKEY10': 'MONKEY10',
+  };
+
+  Set<String> _allowedVoucherCodes = Set<String>.from(_fallbackVoucherCodes);
+  Map<String, String> _codeToRule = Map<String, String>.from(_fallbackCodeToRule);
 
   String _normalizeVoucher(String? code) {
     return (code ?? '').trim().toUpperCase();
   }
 
-  bool _isVoucherAllowed(String code) => _voucherCodes.contains(code);
+  bool _isVoucherAllowed(String code) => _allowedVoucherCodes.contains(code);
+
+  /// Rule logic khớp backend (FREESHIP / GIAM20K / MONKEY10).
+  String get _appliedRule => _appliedVoucherCode.isEmpty
+      ? ''
+      : (_codeToRule[_appliedVoucherCode] ?? '');
 
   double _voucherDeliveryFee() {
-    if (_appliedVoucherCode == 'FREESHIP') return 0;
+    if (_appliedRule == 'FREESHIP') return 0;
     return _cart.deliveryFee;
   }
 
   double _voucherDiscountAmount() {
-    if (_appliedVoucherCode == 'GIAM20K') {
+    final rule = _appliedRule;
+    if (rule == 'GIAM20K') {
       final totalBeforeDiscount = _cart.subtotal + _cart.deliveryFee;
       return totalBeforeDiscount <= 0
           ? 0.0
           : (totalBeforeDiscount >= 20000 ? 20000.0 : totalBeforeDiscount);
     }
-    if (_appliedVoucherCode == 'MONKEY10') {
+    if (rule == 'MONKEY10') {
       final totalBeforeDiscount = _cart.subtotal + _cart.deliveryFee;
       final d = _cart.subtotal * 0.1;
       final capped = d > 30000.0 ? 30000.0 : d;
@@ -920,7 +961,7 @@ class _CartViewState extends State<CartView> {
         _summaryRow(
           "Phí giao hàng",
           CartManager.formatPrice(deliveryFee),
-          hint: _appliedVoucherCode == 'FREESHIP'
+          hint: _appliedRule == 'FREESHIP'
               ? "Miễn phí theo voucher"
               : (_cart.subtotal >= 150000 ? "Miễn phí từ 150k" : null),
         ),
